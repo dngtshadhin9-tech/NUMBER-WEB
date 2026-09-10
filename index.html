@@ -1230,12 +1230,12 @@
             
             const allMatches = Object.values(serviceCountryData).filter(c => c.info.name.toLowerCase().includes(q));
             
-            const panelGroups = { stex: [], voltx: [], zenex: [], unknown: [] };
+            const panelGroups = { stex: [], voltx: [], zenex: [] };
             allMatches.forEach(c => { if(panelGroups[c.panel]) panelGroups[c.panel].push(c); });
             
             let filtered = [];
-            // Limit to max 3 top countries per panel as requested
-            ['stex', 'voltx', 'zenex', 'unknown'].forEach(p => {
+            // Max 9 countries total: Limit to strictly max 3 top countries per panel
+            ['stex', 'voltx', 'zenex'].forEach(p => {
                 if(panelGroups[p]) {
                     panelGroups[p].sort((a,b) => b.totalHits - a.totalHits);
                     filtered = filtered.concat(panelGroups[p].slice(0, 3));
