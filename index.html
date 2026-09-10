@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title id="pageTitleText">Titanium OTP.</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        /* Strict Black & Gray Theme */
+        :root {
+            --brand-navy: #E4E4E7; 
+            --brand-cyan: #A1A1AA; 
+            --bg-main: #000000;    
+            --bg-card: #09090B;    
+            --text-dark: #FAFAFA;  
+            --text-muted: #71717A; 
+            --border-light: #27272A; 
+            --glass-bg: rgba(9, 9, 11, 0.95);
+            --cyan-light: rgba(255, 255, 255, 0.05); 
+            
+            --bg-success: rgba(255, 255, 255, 0.1); --text-success: #E4E4E7; --border-success: rgba(255, 255, 255, 0.2);
+            --bg-danger: rgba(255, 255, 255, 0.05); --text-danger: #A1A1AA; --border-danger: rgba(255, 255, 255, 0.15);
+            --bg-warning: rgba(255, 255, 255, 0.08); --text-warning: #D4D4D8; --border-warning: rgba(255, 255, 255, 0.18);
+            
+            --btn-grad-1: #27272A; --btn-grad-2: #18181B; 
+            --shadow-glow: none;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-dark); -webkit-tap-highlight-color: transparent; transition: background-color 0.3s ease, color 0.3s ease; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; opacity: 0.5; }
+
+        .glass-header { background: var(--glass-bg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border-light); transition: all 0.3s ease; }
+        .nav-bar { background: var(--glass-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-light); padding-bottom: env(safe-area-inset-bottom); transition: all 0.3s ease; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: all 0.3s ease; word-wrap: break-word; overflow-wrap: break-word; }
+
+        .input-field, .adm-mini-input { background-color: var(--bg-main); border: 1px solid var(--border-light); color: var(--text-dark); border-radius: 12px; transition: all 0.2s ease; width: 100%; }
+        .adm-mini-input { padding: 12px; font-size: 12px; font-weight: 600; }
+        .input-field:focus, .adm-mini-input:focus { outline: none; border-color: var(--brand-cyan); box-shadow: 0 0 0 3px var(--cyan-light); background-color: var(--bg-card); }
+
+        .text-main { color: var(--text-dark); } .text-muted { color: var(--text-muted); } .bg-main { background-color: var(--bg-main); } .bg-card { background-color: var(--bg-card); } .border-main { border-color: var(--border-light); }
+        .badge-success { background: var(--bg-success); color: var(--text-success); border: 1px solid var(--border-success); }
+        .badge-danger { background: var(--bg-danger); color: var(--text-danger); border: 1px solid var(--border-danger); }
+        .badge-warning { background: var(--bg-warning); color: var(--text-warning); border: 1px solid var(--border-warning); }
+        .text-success { color: var(--text-success); } .text-danger { color: var(--text-danger); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--btn-grad-1), var(--btn-grad-2)); color: white !important; font-weight: 700; border-radius: 12px; box-shadow: var(--shadow-glow); transition: all 0.15s ease; border: 1px solid var(--border-light); }
+        .btn-primary:active:not(:disabled) { transform: scale(0.98); box-shadow: none; }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        
+        .nav-item { color: var(--text-muted); transition: all 0.2s ease; } .nav-item.active { color: var(--brand-navy); } .nav-item.active svg { stroke: var(--brand-navy); fill: var(--cyan-light); }
+        
+        .admin-tab { padding: 6px 14px; font-size: 11px; font-weight: 700; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; transition: all 0.2s; white-space: nowrap; }
+        .admin-tab.active { color: var(--bg-main) !important; background: var(--brand-navy); border-color: var(--brand-navy); }
+
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; flex-shrink: 0; } .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border-light); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--text-success); } input:checked + .slider:before { transform: translateX(14px); }
+
+        .tools-fab {
+            position: fixed; bottom: 85px; right: 20px; z-index: 50; width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--btn-grad-1), var(--btn-grad-2));
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.05);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-dark); font-size: 24px; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid var(--border-light);
+        }
+        .tools-fab:hover { transform: scale(1.05) translateY(-3px); box-shadow: 0 12px 30px rgba(255, 255, 255, 0.1); }
+        .tools-fab:active { transform: scale(0.95); }
+        
+        .role-badge { padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-left: 6px; }
+        .role-dev { background: #FFFFFF; color: #000; box-shadow: 0 0 8px rgba(255, 255, 255, 0.5); }
+        .role-owner { background: #D4D4D8; color: #000; box-shadow: 0 0 8px rgba(212, 212, 216, 0.5); }
+        .role-admin { background: #A1A1AA; color: #000; box-shadow: 0 0 8px rgba(161, 161, 170, 0.5); }
+
+        .api-toggle-btn {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            background: transparent; color: var(--text-muted);
+            border: none; padding: 6px; border-radius: 8px;
+            cursor: pointer; transition: all 0.18s ease;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 0;
+        }
+        .api-toggle-btn:hover { color: var(--brand-cyan); background: var(--cyan-light); }
+        .api-toggle-btn:active { transform: translateY(-50%) scale(0.9); }
+        .api-toggle-btn svg { width: 17px; height: 17px; stroke-width: 2; }
+        .api-toggle-btn.visible { color: var(--brand-cyan); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+    <!-- Loading Screen -->
+    <div id="appLoadingScreen" class="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[var(--bg-main)] transition-opacity duration-500">
+        <div class="relative flex flex-col items-center">
+            <div class="absolute inset-0 bg-[var(--brand-cyan)] blur-[60px] opacity-20 rounded-full w-32 h-32 -z-10"></div>
+            <img id="loaderLogo" src="" alt="App Logo" class="w-24 h-24 rounded-2xl shadow-2xl mb-6 object-cover border-2 border-[var(--border-light)] bg-[var(--bg-card)] hidden">
+            <div id="loaderLogoFallback" class="w-24 h-24 rounded-2xl shadow-2xl mb-6 flex items-center justify-center text-4xl font-black text-white bg-[var(--btn-grad-1)] border border-[var(--border-light)]">N</div>
+            <h1 id="loaderAppName" class="text-3xl font-black text-[var(--brand-navy)] tracking-tight mb-2">Titanium OTP</h1>
+            <div class="flex gap-1.5 mt-4">
+                <div class="w-2 h-2 rounded-full bg-[var(--brand-cyan)] animate-bounce" style="animation-delay: -0.3s"></div>
+                <div class="w-2 h-2 rounded-full bg-[var(--brand-cyan)] animate-bounce" style="animation-delay: -0.15s"></div>
+                <div class="w-2 h-2 rounded-full bg-[var(--brand-cyan)] animate-bounce"></div>
+            </div>
+        </div>
+    </div>
+
+    <div onclick="switchView('tools')" id="floatingToolsBtn" class="tools-fab">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+    </div>
+
+    <!-- Ban Screen -->
+    <div id="banScreen" class="fixed inset-0 bg-[var(--bg-main)] z-[99999] hidden flex-col items-center justify-center p-6 text-center">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-lg badge-danger border-none">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+        </div>
+        <h1 class="text-3xl font-black text-danger mb-3 tracking-tight">YOU ARE BANNED</h1>
+        <p class="text-muted font-medium max-w-xs">Your access has been revoked by an administrator.</p>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="broadcastModal" class="fixed inset-0 bg-black/80 z-[90] hidden flex-col items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-card border-main border rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div class="bg-main border-b border-main p-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                <h3 class="font-black text-lg text-main">Announcement</h3>
+            </div>
+            <div class="p-6 text-main whitespace-pre-wrap break-words font-medium leading-relaxed" id="broadcastMessageText"></div>
+            <div class="p-4 bg-main border-t border-main">
+                <button onclick="closeBroadcast()" class="w-full btn-primary py-3.5">Got it!</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="glass-header fixed top-0 w-full z-40 px-4 py-3 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2">
+            <img id="headerLogo" src="" alt="App Logo" class="w-8 h-8 rounded-lg object-cover shadow-sm hidden border border-main">
+            <div id="headerLogoFallback" class="w-8 h-8 rounded-lg bg-main flex items-center justify-center font-black text-lg shadow-md border border-main text-main">N</div>
+            <h1 id="headerAppName" class="text-lg font-black tracking-tight" style="color: var(--brand-navy);">Titanium OTP</h1>
+            <span id="headerRoleBadge" class="hidden role-badge">USER</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="adminMenuBtn" onclick="switchView('admin')" class="hidden w-8 h-8 rounded-full bg-main border-main border text-muted flex items-center justify-center hover:opacity-80 transition shadow-sm" title="Admin Panel">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <img id="headerPfp" src="" class="w-9 h-9 rounded-full border-2 border-main shadow-sm object-cover bg-main">
+        </div>
+    </header>
+
+    <main id="mainContainer" class="pt-20 pb-24 px-4 max-w-2xl mx-auto w-full flex-grow relative">
+        
+        <!-- TOOLS VIEW -->
+        <div id="toolsView" class="view-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2 px-1">
+                <button onclick="switchView('getnumber')" class="bg-main border border-main text-main p-2 rounded-xl hover:opacity-80 transition-colors shadow-sm flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h2 class="text-xl font-black text-main truncate" style="color: var(--brand-navy)">⚡ Advanced Tools</h2>
+            </div>
+
+            <div class="card p-5 border-t-4 shadow-lg" style="border-top-color: var(--brand-cyan);">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[var(--cyan-light)] text-[var(--brand-cyan)] flex items-center justify-center text-xl shadow-inner border border-[var(--border-light)]"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <h3 class="font-black text-lg text-main leading-tight" style="color: var(--brand-navy)">2FA Online</h3>
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest">Generate TOTP codes instantly</p>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <input type="text" id="tool2faKey" placeholder="Enter Base32 Secret Key (e.g. JBSWY3DPEHPK...)" class="w-full input-field p-3.5 text-sm font-mono font-bold uppercase">
+                    <button onclick="generate2FACode()" class="w-full btn-primary py-3.5 shadow-md font-black uppercase tracking-wide">Generate Code</button>
+                    
+                    <div id="tool2faResultBox" class="hidden mt-3 p-4 bg-[var(--cyan-light)] border border-[var(--brand-cyan)] rounded-xl flex justify-between items-center shadow-inner">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">Your 2FA Code</span>
+                            <span id="tool2faCodeTxt" class="text-3xl font-black font-mono tracking-widest" style="color: var(--brand-navy)">------</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="generate2FACode()" title="Refresh Code" class="w-10 h-10 bg-card text-[var(--brand-cyan)] rounded-full shadow border border-main hover:opacity-80 flex items-center justify-center"><i class="fa-solid fa-rotate-right refresh-icon"></i></button>
+                            <button onclick="copySpecificText(document.getElementById('tool2faCodeTxt').innerText)" title="Copy Code" class="w-10 h-10 bg-main text-main rounded-full shadow border border-main hover:opacity-80 flex items-center justify-center"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-5 border-t-4 shadow-lg" style="border-top-color: var(--brand-navy);">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-main text-[var(--brand-navy)] border border-main flex items-center justify-center text-xl shadow-sm"><i class="fa-solid fa-user-tag"></i></div>
+                    <div>
+                        <h3 class="font-black text-lg text-main leading-tight" style="color: var(--brand-navy)">Identity Generator</h3>
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-widest">Names & Usernames</p>
+                    </div>
+                </div>
+
+                <div class="bg-main border border-main rounded-xl p-4 mb-4">
+                    <span class="text-[10px] font-black text-muted uppercase tracking-widest block mb-3">1. Random Real Name</span>
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="generateRealName('male')" class="flex-1 bg-card border border-main text-main py-2.5 rounded-lg font-bold text-sm shadow-sm hover:border-[var(--brand-cyan)] transition"><i class="fa-solid fa-mars mr-1 text-muted"></i> Male</button>
+                        <button onclick="generateRealName('female')" class="flex-1 bg-card border border-main text-main py-2.5 rounded-lg font-bold text-sm shadow-sm hover:border-[var(--brand-cyan)] transition"><i class="fa-solid fa-venus mr-1 text-muted"></i> Female</button>
+                    </div>
+                    <div id="toolNameResultContainer" class="hidden justify-between items-center p-3 bg-card rounded-lg border border-main shadow-sm">
+                        <span id="toolNameResultText" class="font-black text-lg text-main break-words truncate" style="color: var(--brand-cyan)"></span>
+                        <button onclick="copySpecificText(document.getElementById('toolNameResultText').innerText)" class="text-[10px] bg-[var(--cyan-light)] text-[var(--brand-cyan)] border border-[var(--brand-cyan)] px-3 py-1.5 rounded uppercase font-black hover:opacity-80 transition flex-shrink-0 ml-2">Copy</button>
+                    </div>
+                </div>
+
+                <div class="bg-main border border-main rounded-xl p-4">
+                    <span class="text-[10px] font-black text-muted uppercase tracking-widest block mb-3">2. Auto IG Username</span>
+                    <button onclick="generateIgUsernames()" class="w-full bg-[var(--brand-navy)] text-[var(--bg-main)] font-black uppercase tracking-wider py-3 rounded-xl shadow-md hover:opacity-90 transition">Generate Usernames</button>
+                    <div id="toolIgResultList" class="mt-3 space-y-2 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GET NUMBER VIEW -->
+        <div id="getnumberView" class="view-section space-y-4">
+            <div class="card p-5 border-t-4" style="border-top-color: var(--brand-cyan);">
+                <label class="block text-[10px] font-black text-muted uppercase tracking-widest mb-2 break-words"><i class="fa-solid fa-magnifying-glass mr-1"></i> Find Best Service/Country</label>
+                <div class="flex gap-2">
+                    <input type="text" id="serviceNameInput" placeholder="e.g. Instagram, WhatsApp" class="w-full p-3 input-field font-bold text-sm">
+                    <button onclick="suggestBestRange()" class="bg-[var(--brand-navy)] text-[var(--bg-main)] px-4 rounded-xl font-black uppercase tracking-wider text-[10px] shadow-sm flex-shrink-0 hover:opacity-80 transition-opacity border border-main">Find</button>
+                </div>
+                <div id="bestRangeResult" class="hidden mt-3"></div>
+            </div>
+
+            <div onclick="switchView('fetchOtp')" class="card p-4 mt-2 border border-[var(--brand-cyan)] bg-[var(--cyan-light)] cursor-pointer hover:opacity-80 transition-opacity flex justify-between items-center shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="bg-main border border-main p-2.5 rounded-lg text-main shadow-sm flex items-center justify-center"><i class="fa-solid fa-radar text-lg text-muted"></i></div>
+                    <div>
+                        <h3 class="font-black text-main text-sm" style="color: var(--brand-navy)">Fetch All OTP</h3>
+                        <p class="text-[9px] font-bold text-muted uppercase mt-0.5 tracking-wider">Find lost codes for any number</p>
+                    </div>
+                </div>
+                <div class="bg-card border border-[var(--brand-cyan)] text-[var(--brand-cyan)] rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fa-solid fa-chevron-right text-xs"></i></div>
+            </div>
+
+            <div class="flex justify-between items-center px-1 mt-4">
+                <h3 class="font-bold text-main text-sm truncate" style="color: var(--brand-navy)">Number Activity</h3>
+                <div class="flex gap-2 items-center">
+                    <button onclick="clearNumberHistory()" class="text-[9px] font-black tracking-widest bg-[var(--bg-danger)] border border-[var(--border-danger)] text-[var(--text-danger)] px-3 py-1.5 rounded-xl shadow-sm hover:opacity-80 transition-colors uppercase">
+                        Clear All
+                    </button>
+                    <div class="flex items-center gap-1.5 bg-card border border-main p-1 rounded-xl shadow-sm">
+                        <button onclick="animateRefresh(this); renderActiveNumbers()" class="bg-main text-muted hover:text-main rounded-lg px-2.5 py-1 transition-colors flex items-center justify-center h-full">
+                            <svg class="w-3 h-3 refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+                        <div class="flex items-center gap-1.5 pr-2" title="Auto-updating live">
+                            <div class="w-1.5 h-1.5 rounded-full bg-[var(--text-dark)] animate-pulse"></div>
+                            <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Live</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card overflow-hidden mt-2">
+                <div class="flex border-b border-main overflow-x-auto scrollbar-hide">
+                    <button class="number-tab active flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors border-[var(--brand-navy)] text-[var(--brand-navy)] whitespace-nowrap px-3" id="tab-num-all" onclick="filterNumberList('ALL')">ALL</button>
+                    <button class="number-tab flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors border-transparent text-muted whitespace-nowrap px-3" id="tab-num-success" onclick="filterNumberList('SUCCESS')">SUCCESS</button>
+                    <button class="number-tab flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors border-transparent text-muted whitespace-nowrap px-3" id="tab-num-pending" onclick="filterNumberList('PENDING')">PENDING</button>
+                    <button class="number-tab flex-1 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors border-transparent text-muted whitespace-nowrap px-3" id="tab-num-failed" onclick="filterNumberList('FAILED')">FAILED</button>
+                </div>
+                <div id="activeNumbersList" class="divide-y divide-main max-h-[60vh] overflow-y-auto pb-4">
+                    <div class="p-8 text-center text-sm text-muted font-semibold break-words">No history available.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FETCH ALL OTP VIEW -->
+        <div id="fetchOtpView" class="view-section hidden space-y-4">
+            <div class="flex items-center gap-3 mb-2 px-1">
+                <button onclick="switchView('getnumber')" class="bg-main border border-main text-main p-2 rounded-xl hover:opacity-80 transition-colors shadow-sm flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h2 class="text-xl font-black text-main truncate" style="color: var(--brand-navy)">Fetch All OTP</h2>
+            </div>
+            
+            <div class="card p-5 border-t-4" style="border-top-color: var(--brand-cyan);">
+                <p class="text-xs font-bold text-muted mb-4 leading-relaxed break-words">Enter a full phone number to fetch all recent OTPs received for it across our servers. System will scan live data for 30 seconds.</p>
+                <div class="flex flex-col gap-3">
+                    <input type="text" id="manualOtpNumber" placeholder="Enter Full Number (e.g. 88017...)" class="w-full p-3.5 input-field font-mono text-sm font-bold">
+                    <button id="btnFetchManualOtp" onclick="fetchManualOtp()" class="btn-primary w-full py-3.5 flex justify-center items-center shadow-md text-sm uppercase tracking-wider font-bold">
+                        Fetch OTP
+                    </button>
+                    <div id="manualOtpResult" class="empty:hidden flex flex-col gap-2 mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONSOLE VIEW (4-SERVICE GRID) -->
+        <div id="consoleView" class="view-section hidden space-y-3">
+            <div class="flex items-center gap-3 mb-2 px-1">
+                <h2 class="text-xl font-black text-main truncate" style="color: var(--brand-navy)">Live Network Services</h2>
+                <div class="flex items-center gap-1.5 bg-card border border-main p-1 rounded-xl shadow-sm ml-auto flex-shrink-0">
+                    <button onclick="animateRefresh(this); loadConsoleData()" class="bg-main text-muted hover:text-main rounded-lg px-3 py-1.5 transition-colors flex items-center justify-center">
+                        <svg class="w-3 h-3 refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                    <div class="flex items-center gap-1.5 pr-2" title="Auto-updating live">
+                        <div class="w-1.5 h-1.5 rounded-full bg-[var(--text-dark)] animate-pulse"></div>
+                        <span class="text-[9px] font-bold text-muted uppercase tracking-widest">Auto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Services Grid -->
+            <div id="serviceGrid" class="grid grid-cols-2 gap-3 mb-2">
+                <div class="col-span-2 px-1 mb-1 mt-1">
+                    <h3 class="font-bold text-main text-sm truncate" style="color: var(--brand-navy)">1. Select Service</h3>
+                </div>
+                <div onclick="selectService('Instagram')" class="card p-5 flex flex-col items-center justify-center cursor-pointer border border-main hover:border-[var(--brand-cyan)] hover:bg-[var(--cyan-light)] transition shadow-sm group">
+                    <img src="https://i.postimg.cc/0NTZDwfW/Instagram-logo-2016-svg.webp" class="w-12 h-12 mb-3 object-contain group-hover:scale-110 transition-transform" alt="Instagram">
+                    <span class="font-black text-sm text-main tracking-wide" style="color: var(--brand-navy)">Instagram</span>
+                </div>
+                <div onclick="selectService('Facebook')" class="card p-5 flex flex-col items-center justify-center cursor-pointer border border-main hover:border-[var(--brand-cyan)] hover:bg-[var(--cyan-light)] transition shadow-sm group">
+                    <img src="https://i.postimg.cc/ZKtvrLp7/Facebook-Logo-2023.png" class="w-12 h-12 mb-3 object-contain group-hover:scale-110 transition-transform" alt="Facebook">
+                    <span class="font-black text-sm text-main tracking-wide" style="color: var(--brand-navy)">Facebook</span>
+                </div>
+                <div onclick="selectService('WhatsApp')" class="card p-5 flex flex-col items-center justify-center cursor-pointer border border-main hover:border-[var(--brand-cyan)] hover:bg-[var(--cyan-light)] transition shadow-sm group">
+                    <img src="https://i.postimg.cc/9QxfNPwX/Whats-App-svg.webp" class="w-12 h-12 mb-3 object-contain group-hover:scale-110 transition-transform" alt="WhatsApp">
+                    <span class="font-black text-sm text-main tracking-wide" style="color: var(--brand-navy)">WhatsApp</span>
+                </div>
+                <div onclick="selectService('Telegram')" class="card p-5 flex flex-col items-center justify-center cursor-pointer border border-main hover:border-[var(--brand-cyan)] hover:bg-[var(--cyan-light)] transition shadow-sm group">
+                    <img src="https://i.postimg.cc/bvWwqzR4/Telegram-logo-svg.webp" class="w-12 h-12 mb-3 object-contain group-hover:scale-110 transition-transform" alt="Telegram">
+                    <span class="font-black text-sm text-main tracking-wide" style="color: var(--brand-navy)">Telegram</span>
+                </div>
+            </div>
+
+            <!-- Step 2: Country Selection -->
+            <div id="serviceCountrySection" class="hidden flex-col gap-3 mb-2 mt-2">
+                <div class="px-1 mb-1 flex items-center justify-between">
+                    <h3 class="font-bold text-main text-sm truncate" style="color: var(--brand-navy)">2. Select Country</h3>
+                    <span id="serviceCountryHitsTotal" class="text-[9px] font-bold text-[var(--brand-cyan)] uppercase tracking-widest bg-[var(--cyan-light)] px-2 py-1 rounded shadow-sm border border-[var(--border-light)]"></span>
+                </div>
+                <div class="flex items-center gap-3 bg-card p-3 rounded-xl border border-main shadow-sm">
+                    <button onclick="backToServices()" class="w-8 h-8 rounded-full bg-main text-muted flex items-center justify-center hover:text-main transition border border-main flex-shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Selected Service</span>
+                        <span id="selectedServiceTitle" class="font-black text-main text-sm truncate uppercase tracking-wider" style="color: var(--brand-cyan)"></span>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <input type="text" id="serviceCountrySearch" oninput="renderServiceCountries()" placeholder="Search available countries..." class="input-field p-3 pl-10 text-sm font-medium shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-muted"></i>
+                </div>
+                
+                <div id="serviceCountryList" class="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pb-20 pt-2">
+                    <!-- dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL VIEW -->
+        <div id="adminView" class="view-section hidden space-y-4 pb-20">
+            <h2 class="font-black text-xl text-main px-1 truncate mb-3" style="color: var(--brand-navy)">Admin Panel</h2>
+            
+            <div class="flex flex-wrap gap-2 pb-3 border-b border-main mb-4">
+                <button class="admin-tab active" id="tab-stats" onclick="switchAdminTab('stats')">Dashboard</button>
+                <button class="admin-tab" id="tab-api" onclick="switchAdminTab('api')">System & Bot</button>
+                <button class="admin-tab" id="tab-admins" onclick="switchAdminTab('admins')">Admins</button>
+                <button class="admin-tab" id="tab-users" onclick="switchAdminTab('users')">Users</button>
+                <button class="admin-tab" id="tab-broadcast" onclick="switchAdminTab('broadcast')">Broadcast</button>
+                <button class="admin-tab" id="tab-links" onclick="switchAdminTab('links')">Links</button>
+            </div>
+
+            <!-- Admin Tab Stats -->
+            <div id="adminTabStats" class="admin-content-section space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="card p-4 text-center border-t-4 col-span-2" style="border-top-color: var(--text-success);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Sys OTP (Total Lifetime)</p>
+                        <p class="text-3xl font-black text-main mt-1 truncate" style="color: var(--brand-navy)" id="adminSysTotal">0</p>
+                    </div>
+                    <div class="card p-4 text-center border-t-2" style="border-top-color: var(--brand-cyan);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Total STEX OTP</p>
+                        <p class="text-xl font-black text-main mt-1 truncate" id="adminSysStex">0</p>
+                    </div>
+                    <div class="card p-4 text-center border-t-2" style="border-top-color: var(--brand-cyan);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Total VOLTX OTP</p>
+                        <p class="text-xl font-black text-main mt-1 truncate" id="adminSysVoltx">0</p>
+                    </div>
+                    <div class="card p-4 text-center border-t-2 col-span-2" style="border-top-color: var(--brand-cyan);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Total ZENEX OTP</p>
+                        <p class="text-xl font-black text-main mt-1 truncate" id="adminSysZenex">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Tab API -->
+            <div id="adminTabApi" class="admin-content-section hidden space-y-4">
+                <div class="card p-5 space-y-4 border-t-4" style="border-top-color: var(--brand-cyan);">
+                    <div class="flex justify-between items-center border-b border-main pb-2">
+                        <h3 class="font-black text-sm text-main uppercase tracking-widest truncate" style="color: var(--brand-cyan)"><i class="fa-brands fa-telegram mr-1"></i> Bot Auto-Responder</h3>
+                        <label class="switch"><input type="checkbox" id="adminEnableBotPolling" onchange="toggleBotEngine()"><span class="slider"></span></label>
+                    </div>
+                    <p class="text-[10px] text-muted font-bold leading-relaxed">Turn this ON while you keep this dashboard open. The Web App will listen to your Bot and send Welcome DMs automatically to new `/start` users.</p>
+                    
+                    <div>
+                        <label class="text-[10px] font-bold text-muted uppercase tracking-wider break-words">Telegram Bot Token (For DMs)</label>
+                        <div class="relative mt-1">
+                            <input type="password" id="adminBotToken" placeholder="e.g. 123456:ABC-DEF..." class="w-full input-field p-3 font-mono text-sm pr-16">
+                            <button type="button" onclick="toggleVisibility('adminBotToken')" class="api-toggle-btn" id="btn-adminBotToken" title="Show"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muted uppercase tracking-wider break-words">Welcome Message (New users)</label>
+                        <textarea id="adminWelcomeMsg" placeholder="Welcome to Number Service Panel!..." class="w-full input-field p-3 text-sm mt-1 h-20"></textarea>
+                    </div>
+                </div>
+
+                <div class="card p-5 space-y-4 border-t-4 mt-2" style="border-top-color: var(--text-warning);">
+                    <h3 class="font-black text-sm text-main uppercase tracking-widest border-b border-main pb-2 truncate" style="color: var(--brand-navy)">App Branding & APIs</h3>
+                    <div class="flex gap-4 flex-wrap mt-3">
+                        <label class="flex items-center gap-2 text-sm font-bold text-main min-w-0">
+                            <input type="checkbox" id="adminEnableStex" class="w-4 h-4 text-muted bg-main border-main flex-shrink-0"> <span class="truncate">Enable STEX</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-main min-w-0">
+                            <input type="checkbox" id="adminEnableVoltx" class="w-4 h-4 text-muted bg-main border-main flex-shrink-0"> <span class="truncate">Enable VOLTX</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-bold text-main min-w-0">
+                            <input type="checkbox" id="adminEnableZenex" class="w-4 h-4 text-muted bg-main border-main flex-shrink-0"> <span class="truncate">Enable ZENEX</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muted uppercase tracking-wider">STEX API Key</label>
+                        <div class="relative mt-1">
+                            <input type="password" id="adminStexKey" class="w-full input-field p-3 font-mono text-sm pr-16">
+                            <button type="button" onclick="toggleVisibility('adminStexKey')" class="api-toggle-btn" id="btn-adminStexKey" title="Show"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muted uppercase tracking-wider">VOLTX API Key</label>
+                        <div class="relative mt-1">
+                            <input type="password" id="adminVoltxKey" class="w-full input-field p-3 font-mono text-sm pr-16">
+                            <button type="button" onclick="toggleVisibility('adminVoltxKey')" class="api-toggle-btn" id="btn-adminVoltxKey" title="Show"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-muted uppercase tracking-wider">ZENEX API Key</label>
+                        <div class="relative mt-1">
+                            <input type="password" id="adminZenexKey" class="w-full input-field p-3 font-mono text-sm pr-16">
+                            <button type="button" onclick="toggleVisibility('adminZenexKey')" class="api-toggle-btn" id="btn-adminZenexKey" title="Show"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                        </div>
+                    </div>
+                    
+                    <button id="btnSaveApiSet" onclick="saveAdminApi()" class="w-full btn-primary py-3.5 shadow-md truncate mt-4">Save Settings & Bot Config</button>
+                </div>
+            </div>
+
+            <!-- Other Admin Tabs -->
+            <div id="adminTabAdmins" class="admin-content-section hidden space-y-4">
+                <div class="card p-5 border-t-4 shadow-sm" style="border-top-color: var(--brand-navy);">
+                    <h3 class="font-black text-sm text-main uppercase tracking-widest border-b border-main pb-2 mb-3" style="color: var(--brand-navy)">Admin Management</h3>
+                    <div class="p-3 bg-main border border-main rounded-xl mb-1">
+                        <p class="text-xs font-bold text-muted"><i class="fa-solid fa-circle-info mr-1"></i> Admins can now only be added or removed directly from the code (APP_CONFIG).</p>
+                    </div>
+                </div>
+                <div class="card overflow-hidden">
+                    <div class="bg-main border-b border-main px-4 py-3"><h3 class="font-bold text-sm text-main uppercase tracking-widest" style="color: var(--brand-navy)">Staff List</h3></div>
+                    <div id="adminStaffList" class="divide-y divide-main max-h-[400px] overflow-y-auto p-2"></div>
+                </div>
+            </div>
+
+            <div id="adminTabUsers" class="admin-content-section hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <div class="card p-4 text-center border-t-4" style="border-top-color: var(--brand-navy);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Total Users</p>
+                        <p class="text-3xl font-black text-main mt-1 truncate" style="color: var(--brand-navy)" id="adminTotalUsersCount">0</p>
+                    </div>
+                    <div class="card p-4 text-center border-t-4" style="border-top-color: var(--brand-cyan);">
+                        <p class="text-[10px] font-bold text-muted uppercase tracking-wider truncate">Active Now</p>
+                        <p class="text-3xl font-black text-main mt-1 truncate" style="color: var(--brand-cyan)" id="adminActiveUsersCount">0</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 mb-2">
+                    <button onclick="toggleAdminUserList()" class="btn-primary flex-1 py-3 text-sm shadow-sm truncate">👥 User List</button>
+                    <div class="bg-card border border-main text-muted px-4 py-3 rounded-xl shadow-sm flex-shrink-0 flex items-center gap-2" title="Auto-updating">
+                        <div class="w-1.5 h-1.5 rounded-full bg-[var(--text-dark)] animate-pulse"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">Auto</span>
+                    </div>
+                </div>
+
+                <div id="adminUserListWrapper" class="card p-0 overflow-hidden hidden">
+                    <div class="bg-main border-b border-main p-4 flex justify-between items-center gap-2">
+                        <input type="text" id="adminUserSearch" placeholder="Search by name or UID..." oninput="debounceFilterUsers()" class="w-full input-field p-2 text-xs min-w-0">
+                    </div>
+                    <div id="adminUserList" class="divide-y divide-main max-h-[450px] overflow-y-auto p-2 pb-24 bg-main"></div>
+                </div>
+            </div>
+
+            <div id="adminTabBroadcast" class="admin-content-section hidden space-y-4">
+                <div class="card p-5 space-y-3 border-t-4" style="border-top-color: var(--brand-navy);">
+                    <label class="text-[10px] font-bold text-muted uppercase tracking-wider break-words">Send Global Announcement</label>
+                    <textarea id="adminBroadcastMessage" placeholder="Type your announcement here... Users will see this next time they open the app." class="w-full input-field p-3 text-sm h-32 font-medium leading-relaxed"></textarea>
+                    <label class="flex items-start gap-2 mt-2 mb-2 cursor-pointer">
+                        <input type="checkbox" id="adminSendTgDm" class="w-4 h-4 bg-main border-main rounded focus:ring-[var(--brand-navy)] mt-0.5 flex-shrink-0">
+                        <span class="text-xs font-bold text-main break-words">Also send direct message in Telegram Bot</span>
+                    </label>
+                    <button id="broadcastBtnElement" onclick="sendBroadcast()" class="w-full btn-primary py-3 shadow-md flex items-center justify-center gap-2 truncate">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                        Send Broadcast
+                    </button>
+                </div>
+            </div>
+
+            <div id="adminTabLinks" class="admin-content-section hidden space-y-4">
+                <div class="card p-5 border-l-4" style="border-left-color: var(--brand-cyan);">
+                    <label class="text-[10px] font-bold text-muted uppercase tracking-wider break-words">Add New Link</label>
+                    <div class="space-y-3 mt-2">
+                        <input type="text" id="adminLinkName" placeholder="Card Title (e.g., Telegram Group)" class="w-full input-field p-3 text-sm font-bold">
+                        <input type="url" id="adminLinkUrl" placeholder="URL (e.g., https://t.me/...)" class="w-full input-field p-3 text-sm">
+                        <button onclick="addCustomLink()" class="w-full btn-primary py-3 rounded-lg text-sm font-bold shadow-md truncate">Add Link</button>
+                    </div>
+                </div>
+                <div class="card overflow-hidden">
+                    <div class="bg-main border-b border-main px-4 py-3">
+                        <h3 class="font-bold text-main text-sm uppercase tracking-widest truncate" style="color: var(--brand-navy)">Manage Links</h3>
+                    </div>
+                    <div id="adminLinksList" class="divide-y divide-main max-h-[300px] overflow-y-auto p-2">
+                        <div class="p-4 text-center text-sm text-muted font-medium break-words">No links added yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav id="bottomNav" class="nav-bar fixed bottom-0 w-full max-w-2xl flex justify-around items-center pt-1.5 pb-safe-bottom z-[1000] shadow-[0_-4px_20px_rgba(0,0,0,0.03)] mx-auto left-0 right-0">
+        <button onclick="switchView('getnumber')" id="nav-getnumber" class="nav-item active flex flex-col items-center p-1 w-full">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            <span class="text-[9px] font-bold tracking-wide">Number</span>
+        </button>
+        <button onclick="switchView('console')" id="nav-console" class="nav-item flex flex-col items-center p-1 w-full">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="text-[9px] font-bold tracking-wide">Console</span>
+        </button>
+    </nav>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[8500] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, increment, addDoc, deleteDoc, updateDoc, getCountFromServer, getDocs, arrayUnion, arrayRemove, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 1. Updated Firebase Config as requested
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqQVFIhNjHn2ijrON3LB_MXXnLiZzGb6o",
+            authDomain: "meta-number-bot.firebaseapp.com",
+            databaseURL: "https://meta-number-bot-default-rtdb.firebaseio.com",
+            projectId: "meta-number-bot",
+            storageBucket: "meta-number-bot.firebasestorage.app",
+            messagingSenderId: "1055469765044",
+            appId: "1:1055469765044:web:2db26cd2cc344b2fbf72e1",
+            measurementId: "G-8P4S506DWS"
+        };
+
+        const appInstance = initializeApp(firebaseConfig);
+        const auth = getAuth(appInstance);
+        const db = getFirestore(appInstance);
+        const appId = 'titanium-otp-app';
+
+        const getPublicCollection = (collName) => collection(db, 'artifacts', appId, 'public', 'data', collName);
+        const getPublicDoc = (collName, docId) => doc(db, 'artifacts', appId, 'public', 'data', collName, docId);
+
+        // 2. Updated Bot Credentials and Owners
+        const APP_CONFIG = {
+            appName: "Titanium OTP",
+            appShortName: "app",
+            appLogo: "https://i.ibb.co/qMbDySyz/photo-2026-06-27-10-26-12.jpg",
+            botUsername: "TitaniumOTP_BOT",
+            admins: ["8505710811"]
+        };
+
+        const DEVS = ["8505710811"];
+        const OWNERS = ["8505710811"];
+
+        let tgUser = { id: 'unknown', first_name: 'Guest', username: '' };
+        let currentUserData = null;
+        let globalSettings = { 
+            stexKey: "MO7ZYIXM1OT", voltxKey: "M2MSHTI5RJW", 
+            zenexKey: "ZNX_LNA5ZV6PABPMX00PBZL2AUYY", // User specified key
+            botToken: "8996416887:AAH05rhyAabGUWlqE90f21apvS__0cUyThQ", // User specified Bot Token
+            customLinks: [], enableStex: true, enableVoltx: true, enableZenex: true,
+            welcomeMsg: "Welcome to Titanium OTP! Premium SMS Verification." 
+        };
+        
+        let rangeStats = {}; let activeRequests = []; let currentNumberFilter = 'ALL';
+        let consoleUpdateInterval = null; let countdownTickerInterval = null; let adminUsersCache = [];
+        let lastUpdateId = 0; let botPollInterval = null;
+        let activeSelectedService = ''; let serviceCountryData = {}; 
+
+        const SERVICE_SMS_KEYWORDS = {
+            "whatsapp": ["whatsapp", "wa", "wap", "w/a", "whatsapp business", "whatsapp code", "whatsapp verification", "whatsapp kod"],
+            "facebook": ["facebook", "fb", "meta", "fbook", "fb code", "facebook code", "fb confirmation"],
+            "instagram": ["instagram", "insta", "ig", "ig code", "instagram code"],
+            "telegram": ["telegram", "tg", "tele", "telegram code", "tg code"],
+            "google": ["google", "gmail", "youtube", "g-", "google voice", "google verification"],
+            "tiktok": ["tiktok", "tik tok", "tikvideo", "tiktok code", "tik code"],
+            "snapchat": ["snapchat", "snap", "snap code", "snapchat code"],
+            "twitter": ["twitter", "x.com", "x code", "your x confirmation", "twitter code"],
+            "binance": ["binance", "bnb", "binances", "binance verification"],
+            "melbet": ["melbet", "mel", "melbet code"],
+            "bkash": ["bkash", "b-kash", "bkash code"],
+            "nagad": ["nagad", "nagad code"],
+            "imo": ["imo", "imo code", "imo verification"],
+            "microsoft": ["microsoft", "ms", "outlook", "microsoft account", "ms code"],
+            "apple": ["apple", "icloud", "itunes", "apple id", "apple code"],
+            "paypal": ["paypal", "pay pal", "paypal code"],
+            "uber": ["uber", "uber code", "uber verification"],
+            "amazon": ["amazon", "amzn", "amazon code"],
+            "netflix": ["netflix", "netflix code"],
+            "discord": ["discord", "discord code"],
+            "spotify": ["spotify", "spotify code"],
+            "linkedin": ["linkedin", "linked in", "linkedin code"],
+            "yahoo": ["yahoo", "yahoo code"],
+            "viber": ["viber", "viber code"],
+            "line": ["line", "line code", "line verification"],
+            "wechat": ["wechat", "we chat", "wechat code"],
+            "signal": ["signal", "signal code"]
+        };
+
+        const COUNTRY_FLAGS = {
+            "afghanistan": "🇦🇫", "albania": "🇦🇱", "algeria": "🇩🇿", "andorra": "🇦🇩", "angola": "🇦🇴",
+            "antigua and barbuda": "🇦🇬", "argentina": "🇦🇷", "armenia": "🇦🇲", "australia": "🇦🇺",
+            "austria": "🇦🇹", "azerbaijan": "🇦🇿", "bahamas": "🇧🇸", "bahrain": "🇧🇭",
+            "bangladesh": "🇧🇩", "barbados": "🇧🇧", "belarus": "🇧🇾", "belgium": "🇧🇪", "belize": "🇧🇿",
+            "benin": "🇧🇯", "bhutan": "🇧🇹", "bolivia": "🇧🇴", "bosnia and herzegovina": "🇧🇦",
+            "botswana": "🇧🇼", "brazil": "🇧🇷", "brunei": "🇧🇳", "bulgaria": "🇧🇬",
+            "burkina faso": "🇧🇫", "burundi": "🇧🇮", "cambodia": "🇰🇭", "cameroon": "🇨🇲",
+            "canada": "🇨🇦", "cape verde": "🇨🇻", "central african republic": "🇨🇫", "chad": "🇹🇩",
+            "chile": "🇨🇱", "china": "🇨🇳", "colombia": "🇨🇴", "comoros": "🇰🇲", "congo": "🇨🇬",
+            "costa rica": "🇨🇷", "cote d'ivoire": "🇨🇮", "ivory coast": "🇨🇮",
+            "croatia": "🇭🇷", "cuba": "🇨🇺", "cyprus": "🇨🇾", "czech republic": "🇨🇿",
+            "denmark": "🇩🇰", "djibouti": "🇩🇯", "dominica": "🇩🇲", "dominican republic": "🇩🇴",
+            "drc": "🇨🇩", "ecuador": "🇪🇨", "egypt": "🇪🇬", "el salvador": "🇸🇻",
+            "equatorial guinea": "🇬🇶", "eritrea": "🇪🇷", "estonia": "🇪🇪", "eswatini": "🇸🇿",
+            "ethiopia": "🇪🇹", "fiji": "🇫🇯", "finland": "🇫🇮", "france": "🇫🇷",
+            "gabon": "🇬🇦", "gambia": "🇬🇲", "georgia": "🇬🇪", "germany": "🇩🇪", "ghana": "🇬🇭",
+            "greece": "🇬🇷", "grenada": "🇬🇩", "guatemala": "🇬🇹", "guinea": "🇬🇳",
+            "guinea bissau": "🇬🇼", "guyana": "🇬🇾", "haiti": "🇭🇹", "honduras": "🇭🇳",
+            "hong kong": "🇭🇰", "hungary": "🇭🇺", "iceland": "🇮🇸", "india": "🇮🇳",
+            "indonesia": "🇮🇩", "iran": "🇮🇷", "iraq": "🇮🇶", "ireland": "🇮🇪", "israel": "🇮🇱",
+            "italy": "🇮🇹", "jamaica": "🇯🇲", "japan": "🇯🇵", "jordan": "🇯🇴", "kazakhstan": "🇰🇿",
+            "kenya": "🇰🇪", "kiribati": "🇰🇮", "kosovo": "🇽🇰", "kuwait": "🇰🇼", "kyrgyzstan": "🇰🇬",
+            "laos": "🇱🇦", "latvia": "🇱🇻", "lebanon": "🇱🇧", "lesotho": "🇱🇸", "liberia": "🇱🇷",
+            "libya": "🇱🇾", "liechtenstein": "🇱🇮", "lithuania": "🇱🇹", "luxembourg": "🇱🇺",
+            "macau": "🇲🇴", "madagascar": "🇲🇬", "malawi": "🇲🇼", "malaysia": "🇲🇾", "maldives": "🇲🇻",
+            "mali": "🇲🇱", "malta": "🇲🇹", "marshall islands": "🇲🇭", "mauritania": "🇲🇷",
+            "mauritius": "🇲🇺", "mexico": "🇲🇽", "micronesia": "🇫🇲", "moldova": "🇲🇩",
+            "monaco": "🇲🇨", "mongolia": "🇲🇳", "montenegro": "🇲🇪", "morocco": "🇲🇦",
+            "mozambique": "🇲🇿", "myanmar": "🇲🇲", "namibia": "🇳🇦", "nauru": "🇳🇷", "nepal": "🇳🇵",
+            "netherlands": "🇳🇱", "new zealand": "🇳🇿", "nicaragua": "🇳🇮", "niger": "🇳🇪",
+            "nigeria": "🇳🇬", "north korea": "🇰🇵", "north macedonia": "🇲🇰", "norway": "🇳🇴",
+            "oman": "🇴🇲", "pakistan": "🇵🇰", "palau": "🇵🇼", "palestine": "🇵🇸", "panama": "🇵🇦",
+            "papua new guinea": "🇵🇬", "paraguay": "🇵🇾", "peru": "🇵🇪", "philippines": "🇵🇭",
+            "poland": "🇵🇱", "portugal": "🇵🇹", "qatar": "🇶🇦", "romania": "🇷🇴", "russia": "🇷🇺",
+            "rwanda": "🇷🇼", "saint kitts and nevis": "🇰🇳", "saint lucia": "🇱🇨",
+            "saint vincent and the grenadines": "🇻🇨", "samoa": "🇼🇸", "san marino": "🇸🇲",
+            "sao tome and principe": "🇸🇹", "saudi arabia": "🇸🇦", "senegal": "🇸🇳", "serbia": "🇷🇸",
+            "seychelles": "🇸🇨", "sierra leone": "🇸🇱", "singapore": "🇸🇬", "slovakia": "🇸🇰",
+            "slovenia": "🇸🇮", "solomon islands": "🇸🇧", "somalia": "🇸🇴", "south africa": "🇿🇦",
+            "south korea": "🇰🇷", "south sudan": "🇸🇸", "spain": "🇪🇸", "sri lanka": "🇱🇰",
+            "sudan": "🇸🇩", "suriname": "🇸🇷", "sweden": "🇸🇪", "switzerland": "🇨🇭", "syria": "🇸🇾",
+            "taiwan": "🇹🇼", "tajikistan": "🇹🇯", "tanzania": "🇹🇿", "thailand": "🇹🇭",
+            "timor leste": "🇹🇱", "togo": "🇹🇬", "tonga": "🇹🇴", "trinidad and tobago": "🇹🇹",
+            "tunisia": "🇹🇳", "turkey": "🇹🇷", "turkmenistan": "🇹🇲", "tuvalu": "🇹🇻",
+            "uganda": "🇺🇬", "ukraine": "🇺🇦", "uae": "🇦🇪", "united arab emirates": "🇦🇪",
+            "united kingdom": "🇬🇧", "uk": "🇬🇧", "usa": "🇺🇸", "united states": "🇺🇸",
+            "uruguay": "🇺🇾", "uzbekistan": "🇺🇿", "vanuatu": "🇻🇺", "vatican city": "🇻🇦",
+            "venezuela": "🇻🇪", "vietnam": "🇻🇳", "yemen": "🇾🇪", "zambia": "🇿🇲", "zimbabwe": "🇿🇼"
+        };
+
+        const PHONE_TO_COUNTRY = {
+            "1": "United States", "7": "Russia", "20": "Egypt", "27": "South Africa",
+            "30": "Greece", "31": "Netherlands", "32": "Belgium", "33": "France",
+            "34": "Spain", "36": "Hungary", "39": "Italy", "40": "Romania",
+            "41": "Switzerland", "43": "Austria", "44": "United Kingdom", "45": "Denmark",
+            "46": "Sweden", "47": "Norway", "48": "Poland", "49": "Germany",
+            "51": "Peru", "52": "Mexico", "53": "Cuba", "54": "Argentina",
+            "55": "Brazil", "56": "Chile", "57": "Colombia", "58": "Venezuela",
+            "60": "Malaysia", "61": "Australia", "62": "Indonesia", "63": "Philippines",
+            "64": "New Zealand", "65": "Singapore", "66": "Thailand", "81": "Japan",
+            "82": "South Korea", "84": "Vietnam", "86": "China", "90": "Turkey",
+            "91": "India", "92": "Pakistan", "93": "Afghanistan", "94": "Sri Lanka",
+            "95": "Myanmar", "98": "Iran", "211": "South Sudan", "212": "Morocco",
+            "213": "Algeria", "216": "Tunisia", "218": "Libya", "220": "Gambia",
+            "221": "Senegal", "222": "Mauritania", "223": "Mali", "224": "Guinea",
+            "225": "Cote d'Ivoire", "226": "Burkina Faso", "227": "Niger", "228": "Togo",
+            "229": "Benin", "230": "Mauritius", "231": "Liberia", "232": "Sierra Leone",
+            "233": "Ghana", "234": "Nigeria", "235": "Chad", "236": "Central African Republic",
+            "237": "Cameroon", "238": "Cape Verde", "239": "Sao Tome and Principe", "240": "Equatorial Guinea",
+            "241": "Gabon", "242": "Congo", "243": "DRC", "244": "Angola", "245": "Guinea Bissau",
+            "249": "Sudan", "250": "Rwanda", "251": "Ethiopia", "252": "Somalia", "253": "Djibouti",
+            "254": "Kenya", "255": "Tanzania", "256": "Uganda", "257": "Burundi",
+            "258": "Mozambique", "260": "Zambia", "261": "Madagascar", "262": "Reunion",
+            "263": "Zimbabwe", "264": "Namibia", "265": "Malawi", "266": "Lesotho",
+            "267": "Botswana", "268": "Eswatini", "269": "Comoros", "291": "Eritrea",
+            "350": "Gibraltar", "351": "Portugal", "352": "Luxembourg", "353": "Ireland",
+            "354": "Iceland", "355": "Albania", "356": "Malta", "357": "Cyprus",
+            "358": "Finland", "359": "Bulgaria", "370": "Lithuania", "371": "Latvia",
+            "372": "Estonia", "373": "Moldova", "374": "Armenia", "375": "Belarus",
+            "376": "Andorra", "377": "Monaco", "378": "San Marino", "379": "Vatican City",
+            "380": "Ukraine", "381": "Serbia", "382": "Montenegro", "383": "Kosovo",
+            "385": "Croatia", "386": "Slovenia", "387": "Bosnia and Herzegovina",
+            "389": "North Macedonia", "420": "Czech Republic", "421": "Slovakia",
+            "423": "Liechtenstein", "501": "Belize", "502": "Guatemala", "503": "El Salvador",
+            "504": "Honduras", "505": "Nicaragua", "506": "Costa Rica", "507": "Panama",
+            "509": "Haiti", "591": "Bolivia", "592": "Guyana", "593": "Ecuador",
+            "595": "Paraguay", "597": "Suriname", "598": "Uruguay", "670": "Timor Leste",
+            "673": "Brunei", "674": "Nauru", "675": "Papua New Guinea",
+            "676": "Tonga", "677": "Solomon Islands", "678": "Vanuatu", "679": "Fiji",
+            "680": "Palau", "685": "Samoa", "686": "Kiribati", "687": "New Caledonia",
+            "688": "Tuvalu", "689": "French Polynesia", "691": "Micronesia",
+            "692": "Marshall Islands", "850": "North Korea", "852": "Hong Kong",
+            "853": "Macau", "855": "Cambodia", "856": "Laos", "880": "Bangladesh",
+            "886": "Taiwan", "960": "Maldives", "961": "Lebanon", "962": "Jordan",
+            "963": "Syria", "964": "Iraq", "965": "Kuwait", "966": "Saudi Arabia",
+            "967": "Yemen", "968": "Oman", "970": "Palestine", "971": "UAE",
+            "972": "Israel", "973": "Bahrain", "974": "Qatar", "975": "Bhutan",
+            "976": "Mongolia", "977": "Nepal", "992": "Tajikistan", "993": "Turkmenistan",
+            "994": "Azerbaijan", "995": "Georgia", "996": "Kyrgyzstan", "998": "Uzbekistan"
+        };
+
+        const SERVICE_SHORTS = {
+            "whatsapp": "WA", "facebook": "FB", "instagram": "IG", "telegram": "TG",
+            "twitter": "TW", "google": "GO", "gmail": "GM", "youtube": "YT",
+            "apple": "AP", "microsoft": "MS", "tiktok": "TT", "snapchat": "SC",
+            "binance": "BN", "melbet": "MB", "bkash": "BK", "nagad": "NG",
+            "imo": "IMO", "paypal": "PP", "uber": "UB", "amazon": "AMZ",
+            "netflix": "NF", "discord": "DC", "spotify": "SP", "linkedin": "LI",
+            "yahoo": "YH", "viber": "VB", "line": "LN", "wechat": "WC", "signal": "SG"
+        };
+
+        window.switchView = switchView; window.switchAdminTab = switchAdminTab; window.copySpecificText = copySpecificText;
+        window.requestNumber = requestNumber; window.saveAdminApi = saveAdminApi; window.loadAdminUsers = loadAdminUsers; window.filterAdminUsers = filterAdminUsers;
+        window.updateUserProp = updateUserProp; window.deleteUser = deleteUser; window.closeBroadcast = closeBroadcast; window.sendBroadcast = sendBroadcast;
+        window.addCustomLink = addCustomLink; window.removeCustomLink = removeCustomLink;
+        window.filterNumberList = filterNumberList;
+        window.animateRefresh = animateRefresh;
+        
+        window.selectService = selectService; window.backToServices = backToServices; window.renderServiceCountries = renderServiceCountries;
+        window.renderActiveNumbers = renderActiveNumbers; window.loadConsoleData = loadConsoleData; window.suggestBestRange = suggestBestRange; window.clearNumberHistory = clearNumberHistory;
+        window.fetchManualOtp = fetchManualOtp; 
+        
+        window.generate2FACode = generate2FACode; window.generateRealName = generateRealName; window.generateIgUsernames = generateIgUsernames;
+        window.toggleBotEngine = toggleBotEngine;
+        window.loadAdminStats = loadAdminStats; 
+        window.toggleVisibility = toggleVisibility; window.toggleAdminUserList = toggleAdminUserList; window.debounceFilterUsers = debounceFilterUsers;
+
+        const EYE_SHOW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
+        const EYE_HIDE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`;
+
+        function toggleVisibility(id) {
+            const input = document.getElementById(id);
+            const btn   = document.getElementById('btn-' + id);
+            if (!input || !btn) return;
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.innerHTML = isHidden ? EYE_HIDE_SVG : EYE_SHOW_SVG;
+            btn.title     = isHidden ? 'Hide' : 'Show';
+            btn.classList.toggle('visible', isHidden);
+            if (isHidden) {
+                clearTimeout(btn._hideTimer);
+                btn._hideTimer = setTimeout(() => { if (input.type === 'text') toggleVisibility(id); }, 15000);
+            } else { clearTimeout(btn._hideTimer); }
+        }
+
+        let adminUserListOpen = false;
+        function toggleAdminUserList() {
+            adminUserListOpen = !adminUserListOpen;
+            document.getElementById('adminUserListWrapper').classList.toggle('hidden', !adminUserListOpen);
+            if (adminUserListOpen) loadAdminUsers();
+        }
+
+        let userDebounceTimer;
+        function debounceFilterUsers() {
+            clearTimeout(userDebounceTimer);
+            userDebounceTimer = setTimeout(filterAdminUsers, 300);
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(view => { view.classList.add('hidden'); });
+            const target = document.getElementById(viewId + 'View');
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(nav => { nav.classList.remove('active'); });
+            let activeNavId = viewId;
+            if(viewId === 'fetchOtp') activeNavId = 'getnumber';
+            
+            const activeNav = document.getElementById('nav-' + activeNavId);
+            if (activeNav) activeNav.classList.add('active');
+            
+            if(viewId === 'console') { loadConsoleData(); if(!consoleUpdateInterval) consoleUpdateInterval = setInterval(loadConsoleData, 5000); } 
+            else { clearInterval(consoleUpdateInterval); consoleUpdateInterval = null; }
+            if(viewId === 'getnumber') renderActiveNumbers();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active')); 
+            const targetTab = document.getElementById('tab-' + tabId);
+            if(targetTab) targetTab.classList.add('active');
+            
+            document.querySelectorAll('.admin-content-section').forEach(s => s.classList.add('hidden')); 
+            const map = {
+                stats:'adminTabStats', api:'adminTabApi', admins:'adminTabAdmins', 
+                users:'adminTabUsers', broadcast:'adminTabBroadcast', links:'adminTabLinks'
+            };
+            if(map[tabId]) document.getElementById(map[tabId]).classList.remove('hidden');
+            if(tabId === 'users') loadAdminUsers();
+        }
+
+        function copySpecificText(t) {
+            const el = document.createElement("textarea"); el.value = t; document.body.appendChild(el); el.select();
+            try { document.execCommand('copy'); showToast("Copied!", "success"); } catch(e) {} el.remove();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            let bgClass = "bg-[var(--bg-card)] text-[var(--text-dark)] border-[var(--border-light)]";
+            if (type === 'success') bgClass = "badge-success";
+            if (type === 'error') bgClass = "badge-danger";
+            if (type === 'warning') bgClass = "badge-warning";
+            toast.className = `toast-enter border px-4 py-3 rounded-xl shadow-lg text-sm flex items-center gap-2 ${bgClass}`;
+            toast.innerHTML = `<span class="truncate">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function getUserRole(uid) {
+            const idStr = String(uid);
+            if(DEVS.includes(idStr)) return "DEVELOPER";
+            if(OWNERS.includes(idStr)) return "OWNER";
+            if(APP_CONFIG.admins.includes(idStr)) return "ADMIN";
+            return "USER";
+        }
+        function isAdmin(uid) { return getUserRole(uid) !== "USER"; }
+
+        function getCountryInfo(numStr) {
+            const digits = String(numStr || "").replace(/\D/g, ''); 
+            let mc = null;
+            for(let len=4; len>=1; len--) { 
+                if(digits.length >= len) { 
+                    const p = digits.substring(0, len); 
+                    if(PHONE_TO_COUNTRY[p]) { mc = PHONE_TO_COUNTRY[p]; break; } 
+                } 
+            }
+            if(!mc) return { name: "Global", flag: "🌍" };
+            return { name: mc, flag: COUNTRY_FLAGS[mc.toLowerCase()] || "🌍" };
+        }
+
+        function esc(v) { return String(v ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[m])); }
+
+        function toggleBotEngine() {
+            const isEnabled = document.getElementById('adminEnableBotPolling').checked;
+            if(isEnabled) {
+                if(!globalSettings.botToken) { document.getElementById('adminEnableBotPolling').checked = false; return showToast("Please save Bot Token first", "error"); }
+                showToast("Bot Engine Started! Keep page open.", "success");
+                botPollInterval = setInterval(pollTelegramUpdates, 2500);
+            } else { clearInterval(botPollInterval); showToast("Bot Engine Stopped.", "info"); }
+        }
+
+        async function pollTelegramUpdates() {
+            if(!globalSettings.botToken) return;
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${globalSettings.botToken}/getUpdates?offset=${lastUpdateId}&timeout=2`);
+                const data = await res.json();
+                if(data.ok && data.result.length > 0) {
+                    for(const update of data.result) {
+                        lastUpdateId = update.update_id + 1; 
+                        if(update.message && update.message.text && update.message.text.startsWith('/start')) {
+                            const chatId = update.message.chat.id;
+                            const welcomeTxt = globalSettings.welcomeMsg || "Welcome to Titanium OTP!";
+                            const botUser = APP_CONFIG.botUsername;
+                            const appShortName = APP_CONFIG.appShortName;
+                            
+                            const parts = update.message.text.split(' ');
+                            let appUrl = `https://t.me/${botUser}/${appShortName}`;
+                            if(parts.length > 1) appUrl += `?startapp=${parts[1]}`;
+                            
+                            const payload = {
+                                chat_id: chatId, 
+                                text: `🎉 <b>${welcomeTxt}</b>`, 
+                                parse_mode: 'HTML',
+                                reply_markup: { inline_keyboard: [[{ text: "🚀 OPEN APP", url: appUrl }]] }
+                            };
+                            await fetch(`https://api.telegram.org/bot${globalSettings.botToken}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function saveRequestsToStorage() {
+            if(!tgUser || !tgUser.id) return;
+            const key = `titanium_reqs_${tgUser.id}`;
+            const toSave = activeRequests.slice(0, 150).map(r => { const {intervalId, ...rest} = r; return rest; });
+            localStorage.setItem(key, JSON.stringify(toSave));
+        }
+
+        function loadStoredRequests() {
+            if(!tgUser || !tgUser.id) return;
+            const key = `titanium_reqs_${tgUser.id}`;
+            try {
+                const stored = localStorage.getItem(key);
+                if(stored) {
+                    activeRequests = JSON.parse(stored);
+                    activeRequests.forEach(req => { 
+                        if(!req.otps) req.otps = [];
+                        if(!req.processedIds) req.processedIds = [];
+                        if(req.code && req.otps.length === 0) { req.otps.push({code: req.code, message: req.message || 'Legacy OTP', time: req.startTime}); }
+                        if (Date.now() - req.startTime < 20 * 60 * 1000) { startPolling(req); } 
+                        else if (req.status === 'PENDING') { req.status = 'FAILED'; }
+                    });
+                }
+            } catch(e) {}
+        }
+        
+        function clearNumberHistory() {
+            activeRequests = []; saveRequestsToStorage(); renderActiveNumbers();
+            showToast("History cleared successfully", "success");
+        }
+
+        async function loadAdminStats() {
+            if (!isAdmin(tgUser.id)) return;
+            try {
+                const qAll = getPublicCollection('otps');
+                
+                const snapTotal = await getCountFromServer(qAll);
+                const tot = document.getElementById('adminSysTotal'); if(tot) tot.innerText = snapTotal.data().count;
+
+                const qStex = query(qAll, where('panel', '==', 'stex'));
+                const snapStex = await getCountFromServer(qStex);
+                const stx = document.getElementById('adminSysStex'); if(stx) stx.innerText = snapStex.data().count;
+
+                const qVoltx = query(qAll, where('panel', '==', 'voltx'));
+                const snapVoltx = await getCountFromServer(qVoltx);
+                const vlx = document.getElementById('adminSysVoltx'); if(vlx) vlx.innerText = snapVoltx.data().count;
+
+                const qZenex = query(qAll, where('panel', '==', 'zenex'));
+                const snapZenex = await getCountFromServer(qZenex);
+                const znx = document.getElementById('adminSysZenex'); if(znx) znx.innerText = snapZenex.data().count;
+            } catch(e) {}
+        }
+
+        function applyHardcodedBranding() {
+            const appName = APP_CONFIG.appName;
+            document.getElementById('pageTitleText').innerText = appName;
+            document.getElementById('loaderAppName').innerText = appName;
+            document.getElementById('headerAppName').innerHTML = appName.substring(0, appName.length - 1) + `<span style="color: var(--brand-cyan);">${appName.slice(-1)}</span>`;
+            
+            const logoUrl = APP_CONFIG.appLogo;
+            if(logoUrl) {
+                document.getElementById('loaderLogo').src = logoUrl; document.getElementById('loaderLogo').classList.remove('hidden');
+                document.getElementById('loaderLogoFallback').classList.add('hidden');
+                document.getElementById('headerLogo').src = logoUrl; document.getElementById('headerLogo').classList.remove('hidden');
+                document.getElementById('headerLogoFallback').classList.add('hidden');
+            } else {
+                document.getElementById('loaderLogo').classList.add('hidden'); document.getElementById('loaderLogoFallback').classList.remove('hidden');
+                document.getElementById('headerLogo').classList.add('hidden'); document.getElementById('headerLogoFallback').classList.remove('hidden');
+                document.getElementById('loaderLogoFallback').innerText = appName.charAt(0).toUpperCase();
+                document.getElementById('headerLogoFallback').innerText = appName.charAt(0).toUpperCase();
+            }
+        }
+
+        async function initApp() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                try { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } catch(e) {}
+                const initData = window.Telegram.WebApp.initDataUnsafe;
+                const urlParams = new URLSearchParams(window.location.search);
+                const queryUid = urlParams.get('uid');
+                
+                if (initData && initData.user) { tgUser = initData.user; } 
+                else if (queryUid) { tgUser = { id: queryUid, first_name: 'AdminPreview', username: 'admin' }; } 
+                else {
+                    let randId = 'web_' + Math.floor(Math.random() * 900000 + 100000);
+                    if(localStorage.getItem('numax_web_uid')) randId = localStorage.getItem('numax_web_uid');
+                    else localStorage.setItem('numax_web_uid', randId);
+                    tgUser = { id: randId, first_name: 'WebUser', username: 'guest' };
+                }
+            }
+
+            const pfpUrl = tgUser.photo_url || `https://ui-avatars.com/api/?name=${tgUser.first_name}&background=20003B&color=00FFCC`;
+            document.getElementById('headerPfp').src = pfpUrl; 
+
+            loadStoredRequests();
+            applyHardcodedBranding();
+
+            try {
+                await signInAnonymously(auth);
+                if (!auth.currentUser) return; 
+
+                listenToGlobalSettings();
+                renderAdminList();
+                await syncUser(); 
+                loadConsoleData();
+                startCountdownTicker();
+
+                const role = getUserRole(tgUser.id);
+                if (role !== "USER") {
+                    document.getElementById('adminMenuBtn').classList.remove('hidden');
+                    const badge = document.getElementById('headerRoleBadge');
+                    badge.classList.remove('hidden'); badge.innerText = role;
+                    if(role==='DEVELOPER') badge.classList.add('role-dev');
+                    if(role==='OWNER') badge.classList.add('role-owner');
+                    if(role==='ADMIN') badge.classList.add('role-admin');
+                    
+                    loadAdminStats();
+                }
+
+                setTimeout(() => {
+                    const loader = document.getElementById('appLoadingScreen');
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.classList.add('hidden'), 500);
+                }, 800);
+                
+                if(!currentUserData || !currentUserData.banned) {
+                    switchView('getnumber');
+                }
+            } catch (err) {
+                console.error("Firebase Init Error:", err);
+                const loader = document.getElementById('appLoadingScreen'); loader.classList.add('hidden');
+                showToast("Connection Error: " + (err.message || "Failed to initialize"), "error");
+            }
+        }
+
+        function renderAdminList() {
+            const listEl = document.getElementById('adminStaffList');
+            if(!listEl) return;
+            listEl.innerHTML = '';
+            
+            DEVS.forEach(uid => { listEl.innerHTML += `<div class="flex justify-between items-center p-3 bg-card border border-main rounded-xl mb-2"><div class="flex flex-col"><span class="font-bold text-main text-sm">UID: ${uid}</span><span class="role-badge role-dev w-max ml-0 mt-1">DEVELOPER</span></div></div>`; });
+            OWNERS.forEach(uid => { listEl.innerHTML += `<div class="flex justify-between items-center p-3 bg-card border border-main rounded-xl mb-2"><div class="flex flex-col"><span class="font-bold text-main text-sm">UID: ${uid}</span><span class="role-badge role-owner w-max ml-0 mt-1">OWNER</span></div></div>`; });
+            
+            APP_CONFIG.admins.forEach(uid => {
+                if(!DEVS.includes(uid) && !OWNERS.includes(uid)) {
+                    listEl.innerHTML += `<div class="flex justify-between items-center p-3 bg-card border border-main rounded-xl mb-2"><div class="flex flex-col"><span class="font-bold text-main text-sm">UID: ${uid}</span><span class="role-badge role-admin w-max ml-0 mt-1">ADMIN</span></div></div>`;
+                }
+            });
+        }
+
+        function listenToGlobalSettings() {
+            onSnapshot(getPublicDoc('global', 'settings'), (snap) => {
+                if (snap.exists()) {
+                    globalSettings = {...globalSettings, ...snap.data()};
+
+                    const links = globalSettings.customLinks || [];
+
+                    if (isAdmin(tgUser.id)) {
+                        if (!document.getElementById('adminStexKey').dataset.synced) {
+                            document.getElementById('adminStexKey').value = globalSettings.stexKey || 'MO7ZYIXM1OT'; 
+                            document.getElementById('adminVoltxKey').value = globalSettings.voltxKey || 'M2MSHTI5RJW'; 
+                            document.getElementById('adminZenexKey').value = globalSettings.zenexKey || 'ZNX_LNA5ZV6PABPMX00PBZL2AUYY';
+                            document.getElementById('adminBotToken').value = globalSettings.botToken || '8996416887:AAH05rhyAabGUWlqE90f21apvS__0cUyThQ'; 
+                            document.getElementById('adminWelcomeMsg').value = globalSettings.welcomeMsg || 'Welcome to Titanium OTP! Premium SMS Verification.'; 
+                            document.getElementById('adminStexKey').dataset.synced = "true";
+                        }
+                        
+                        document.getElementById('adminEnableStex').checked = globalSettings.enableStex !== false; 
+                        document.getElementById('adminEnableVoltx').checked = globalSettings.enableVoltx !== false; 
+                        document.getElementById('adminEnableZenex').checked = globalSettings.enableZenex !== false; 
+                        
+                        document.getElementById('adminLinksList').innerHTML = links.map((lnk, i) => `<div class="flex justify-between items-center p-3 bg-card mb-2 rounded-xl border border-main shadow-sm"><div class="flex flex-col overflow-hidden pr-2"><span class="text-sm font-bold text-main truncate">${lnk.name}</span><span class="text-[10px] text-muted font-mono truncate mt-0.5">${lnk.url}</span></div><button onclick="removeCustomLink(${i})" class="badge-danger p-2 rounded-lg transition-colors flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`).join('') || '<div class="p-4 text-center text-sm text-muted font-medium break-words">No links added.</div>';
+                    }
+                } else {
+                    setDoc(getPublicDoc('global', 'settings'), {
+                        customLinks: [],
+                        welcomeMsg: globalSettings.welcomeMsg || 'Welcome!',
+                        enableStex: true,
+                        enableVoltx: true,
+                        enableZenex: true
+                    }, { merge: true });
+                }
+                
+                if(snap.exists() && snap.data().broadcastMessage) {
+                    const b = snap.data();
+                    if(b.broadcastTimestamp && currentUserData && (!currentUserData.lastSeenBroadcast || currentUserData.lastSeenBroadcast < b.broadcastTimestamp)) {
+                        document.getElementById('broadcastMessageText').innerText = b.broadcastMessage;
+                        document.getElementById('broadcastModal').classList.remove('hidden'); document.getElementById('broadcastModal').classList.add('flex');
+                    }
+                }
+            }, (error) => console.error(error));
+        }
+
+        async function syncUser() {
+            const uidStr = String(tgUser.id);
+            const userRef = getPublicDoc('users', uidStr);
+            const snap = await getDoc(userRef);
+            
+            if (snap.exists()) {
+                currentUserData = snap.data();
+                await updateDoc(userRef, { name: tgUser.first_name, username: tgUser.username || '', lastActive: Date.now() });
+            } else {
+                currentUserData = { uid: uidStr, name: tgUser.first_name, username: tgUser.username || '', banned: false, otpCount: 0, lastSeenBroadcast: Date.now(), joinedAt: Date.now(), lastActive: Date.now() };
+                await setDoc(userRef, currentUserData);
+
+                if (globalSettings.botToken && globalSettings.welcomeMsg) {
+                    const botUser = APP_CONFIG.botUsername;
+                    const appShortName = APP_CONFIG.appShortName;
+                    const appUrl = `https://t.me/${botUser}/${appShortName}`;
+                    try { 
+                        fetch(`https://api.telegram.org/bot${globalSettings.botToken}/sendMessage`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ 
+                                chat_id: uidStr, 
+                                text: `🎉 <b>${globalSettings.welcomeMsg}</b>`, 
+                                parse_mode: 'HTML',
+                                reply_markup: { inline_keyboard: [[{ text: "🚀 OPEN APP", url: appUrl }]] }
+                            }) 
+                        }); 
+                    } catch(e){}
+                }
+            }
+
+            enforceBanUI();
+            
+            onSnapshot(userRef, (d) => {
+                if(d.exists()) { 
+                    currentUserData = d.data(); enforceBanUI(); 
+                }
+            }, (error) => console.error(error));
+        }
+
+        function enforceBanUI() { 
+            if(!currentUserData) return; 
+            const mainEl = document.getElementById('mainContainer'); 
+            const navEl = document.getElementById('bottomNav'); 
+            const banEl = document.getElementById('banScreen'); 
+            const floatBtn = document.getElementById('floatingToolsBtn');
+            
+            if (currentUserData.banned) { 
+                mainEl.style.display = 'none'; 
+                navEl.style.display = 'none'; 
+                if(floatBtn) floatBtn.style.display = 'none';
+                banEl.classList.remove('hidden'); 
+                banEl.classList.add('flex'); 
+            } else { 
+                mainEl.style.display = 'block'; 
+                navEl.style.display = 'flex'; 
+                if(floatBtn) floatBtn.style.display = 'flex';
+                banEl.classList.add('hidden'); 
+                banEl.classList.remove('flex'); 
+            } 
+        }
+
+        async function closeBroadcast() { 
+            document.getElementById('broadcastModal').classList.add('hidden'); 
+            document.getElementById('broadcastModal').classList.remove('flex'); 
+            const ts = Date.now(); 
+            await updateDoc(getPublicDoc('users', String(tgUser.id)), {lastSeenBroadcast: ts}); 
+            currentUserData.lastSeenBroadcast = ts; 
+        }
+
+        function selectService(svcName) {
+            if(!allConsoleHits || allConsoleHits.length === 0) {
+                showToast("Fetching live data, please wait...", "info");
+                return;
+            }
+            activeSelectedService = svcName.toLowerCase();
+            document.getElementById('serviceGrid').classList.add('hidden');
+            document.getElementById('serviceCountrySection').classList.remove('hidden');
+            document.getElementById('serviceCountrySection').classList.add('flex');
+            document.getElementById('selectedServiceTitle').innerText = svcName;
+            
+            calculateServiceCountries();
+            renderServiceCountries();
+        }
+
+        function backToServices() {
+            activeSelectedService = '';
+            document.getElementById('serviceCountrySearch').value = '';
+            document.getElementById('serviceCountrySection').classList.add('hidden');
+            document.getElementById('serviceCountrySection').classList.remove('flex');
+            document.getElementById('serviceGrid').classList.remove('hidden');
+        }
+
+        function calculateServiceCountries() {
+            serviceCountryData = {};
+            allConsoleHits.forEach(h => {
+                let matchesService = false;
+                const lowerMsg = h.message ? h.message.toLowerCase() : '';
+                const svcKeywords = SERVICE_SMS_KEYWORDS[activeSelectedService] || [activeSelectedService];
+                
+                if (h.sid && h.sid.toLowerCase() === activeSelectedService) matchesService = true;
+                if (!matchesService && svcKeywords.some(kw => lowerMsg.includes(kw))) matchesService = true;
+                if (!matchesService && SERVICE_SHORTS[activeSelectedService] && h.sid && h.sid.toUpperCase() === SERVICE_SHORTS[activeSelectedService]) matchesService = true;
+
+                if(matchesService) {
+                    const rClean = h.range.replace('XXX', '');
+                    const cInfo = getCountryInfo(rClean);
+                    const pnl = h.panel || 'unknown';
+                    
+                    const key = `${pnl}_${cInfo.name}`;
+                    if(!serviceCountryData[key]) {
+                        serviceCountryData[key] = { panel: pnl, info: cInfo, ranges: {}, totalHits: 0, latestTime: 0 };
+                    }
+                    
+                    if(!serviceCountryData[key].ranges[rClean]) {
+                        serviceCountryData[key].ranges[rClean] = { hits: 0, latestTime: 0 };
+                    }
+                    
+                    serviceCountryData[key].ranges[rClean].hits++;
+                    if (h.time > serviceCountryData[key].ranges[rClean].latestTime) {
+                        serviceCountryData[key].ranges[rClean].latestTime = h.time;
+                    }
+                    
+                    serviceCountryData[key].totalHits++;
+                    if (h.time > serviceCountryData[key].latestTime) {
+                        serviceCountryData[key].latestTime = h.time;
+                    }
+                }
+            });
+        }
+
+        function renderServiceCountries() {
+            const list = document.getElementById('serviceCountryList');
+            const q = document.getElementById('serviceCountrySearch').value.toLowerCase();
+            list.innerHTML = '';
+            
+            const allMatches = Object.values(serviceCountryData).filter(c => c.info.name.toLowerCase().includes(q));
+            
+            const panelGroups = { stex: [], voltx: [], zenex: [], unknown: [] };
+            allMatches.forEach(c => { if(panelGroups[c.panel]) panelGroups[c.panel].push(c); });
+            
+            let filtered = [];
+            // Limit to max 3 top countries per panel as requested
+            ['stex', 'voltx', 'zenex', 'unknown'].forEach(p => {
+                if(panelGroups[p]) {
+                    panelGroups[p].sort((a,b) => b.totalHits - a.totalHits);
+                    filtered = filtered.concat(panelGroups[p].slice(0, 3));
+                }
+            });
+            
+            filtered.sort((a, b) => b.totalHits - a.totalHits);
+            
+            const hitTotalEl = document.getElementById('serviceCountryHitsTotal');
+            if(hitTotalEl) {
+                const totalSvcHits = allMatches.reduce((sum, c) => sum + c.totalHits, 0);
+                hitTotalEl.innerText = `${totalSvcHits} Live Hits`;
+            }
+
+            if(filtered.length === 0) {
+                list.innerHTML = `<div class="col-span-2 text-center p-4 text-muted text-sm font-medium bg-card rounded-xl border border-main shadow-sm">No recent data for ${activeSelectedService.toUpperCase()}</div>`;
+                return;
+            }
+            
+            let html = '';
+            filtered.forEach(c => {
+                // Determine the best range by absolute latest OTP time for this panel and country
+                let rangesArr = Object.keys(c.ranges).map(r => ({ range: r, latestTime: c.ranges[r].latestTime }));
+                rangesArr.sort((a,b) => b.latestTime - a.latestTime); 
+                let bestRange = rangesArr.length > 0 ? rangesArr[0].range : '';
+                
+                // NO VISUAL PANEL TEXT - Keeping it strictly hidden per user request
+                html += `
+                <div class="bg-card border border-[var(--border-light)] rounded-xl p-3 flex flex-col justify-between shadow-sm bg-opacity-10 hover:border-[var(--brand-cyan)] transition relative overflow-hidden mt-1">
+                    <div class="flex items-center gap-2 mb-2 mt-1">
+                        <span class="text-3xl drop-shadow-sm">${c.info.flag}</span>
+                        <div class="flex flex-col min-w-0">
+                            <span class="font-bold text-main text-xs truncate uppercase tracking-wide" style="color: var(--brand-navy)">${c.info.name}</span>
+                            <span class="text-[9px] font-bold text-muted uppercase tracking-widest mt-0.5"><i class="fa-solid fa-chart-simple mr-1 text-[var(--brand-cyan)]"></i> Hits: ${c.totalHits}</span>
+                        </div>
+                    </div>
+                    <button onclick="requestNumber('${bestRange}', '${c.panel}')" class="w-full bg-main border border-main text-main hover:bg-[var(--brand-navy)] hover:text-[var(--bg-main)] transition-colors py-2 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm truncate">Get Number</button>
+                </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function suggestBestRange() {
+            const svc = document.getElementById('serviceNameInput').value.trim().toLowerCase();
+            if(!svc) return showToast("Enter a service name", "warning");
+            if(!allConsoleHits || allConsoleHits.length === 0) return showToast("Fetching live data, please wait...", "info");
+
+            const rangeCounts = {};
+            allConsoleHits.forEach(h => {
+                if((h.message && h.message.toLowerCase().includes(svc)) || (h.sid && h.sid.toLowerCase().includes(svc))) {
+                    const r = h.range.replace('XXX', '');
+                    rangeCounts[r] = (rangeCounts[r] || 0) + 1;
+                }
+            });
+
+            let bestRange = ''; let maxCount = 0;
+            for(const r in rangeCounts) { if(rangeCounts[r] > maxCount) { maxCount = rangeCounts[r]; bestRange = r; } }
+
+            const resBox = document.getElementById('bestRangeResult');
+            if(bestRange) {
+                const country = getCountryInfo(bestRange);
+                resBox.innerHTML = `
+                    <div class="p-4 bg-card border border-main rounded-xl flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${country.flag}</span>
+                            <div class="flex flex-col">
+                                <span class="font-black text-main text-sm uppercase tracking-wider" style="color: var(--brand-navy)">${country.name}</span>
+                                <span class="text-[10px] font-bold text-muted uppercase tracking-widest mt-0.5">Success: High (${maxCount} hits)</span>
+                            </div>
+                        </div>
+                        <button onclick="requestNumber('${bestRange}')" class="bg-[var(--brand-navy)] text-[var(--bg-main)] px-4 py-2.5 rounded-lg text-[10px] font-black uppercase shadow-md hover:opacity-80 transition flex-shrink-0 ml-2">Get Number</button>
+                    </div>
+                `;
+                resBox.classList.remove('hidden');
+                showToast(`Best Option Found!`, "success");
+            } else {
+                resBox.innerHTML = `<div class="p-3 bg-[var(--bg-danger)] border border-[var(--border-danger)] rounded-xl text-center"><span class="text-[var(--text-danger)] font-bold text-xs uppercase tracking-widest">No recent data for "${svc}"</span></div>`;
+                resBox.classList.remove('hidden');
+            }
+        }
+
+        async function requestNumber(rid, forcePanel = null) {
+            if (currentUserData && currentUserData.banned) return;
+            if(!rid) return showToast("Invalid Range", "error");
+
+            showToast("Allocating number...", "info");
+
+            try {
+                let panels = [];
+                if (forcePanel) {
+                    panels.push(forcePanel); // Lock logic to latest hit panel
+                } else {
+                    if(globalSettings.enableStex) panels.push('stex');
+                    if(globalSettings.enableVoltx) panels.push('voltx');
+                    if(globalSettings.enableZenex) panels.push('zenex');
+
+                    if(panels.length === 0) return showToast("No active providers", "error");
+
+                    panels.sort((a,b) => {
+                        const hA = (rangeStats[rid] && rangeStats[rid][a]) ? rangeStats[rid][a] : 0;
+                        const hB = (rangeStats[rid] && rangeStats[rid][b]) ? rangeStats[rid][b] : 0;
+                        return hB - hA;
+                    });
+                }
+
+                let resData = null;
+                let preferred = null;
+
+                for (const p of panels) {
+                    resData = await tryGetNum(p, rid);
+                    if (resData && resData.meta && resData.meta.code === 200) {
+                        preferred = p;
+                        break;
+                    }
+                }
+
+                if (resData && resData.meta && resData.meta.code === 200) {
+                    const allocatedNum = resData.data.full_number || resData.data.no_plus_number || resData.data.number.replace('+',''); 
+                    const newReq = { fullNumber: allocatedNum, panel: preferred, startTime: Date.now(), status: 'PENDING', message: '', code: '', otps: [], processedIds: [] };
+                    activeRequests.unshift(newReq); saveRequestsToStorage(); renderActiveNumbers();
+                    copySpecificText("+" + allocatedNum); startPolling(newReq);
+                    showToast(`Number Allocated Successfully!`, "success");
+                    switchView('getnumber');
+                } else showToast("Out of stock or invalid across all servers", "error");
+            } catch(e) { showToast("Network Error", "error"); } 
+        }
+
+        async function tryGetNum(panel, rid) {
+            let base = '', key = '', payload = {}, headerName = 'mauthapi';
+            // Proper Zenex V4 API implementation for provisioning numbers
+            if(panel === 'stex') { base = 'https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/getnum'; key = globalSettings.stexKey; payload = {rid}; }
+            else if(panel === 'voltx') { base = 'https://api.2oo9.cloud/MXS47FLFX0U/tnevs/@public/api/getnum'; key = globalSettings.voltxKey; payload = {rid}; }
+            else if(panel === 'zenex') { base = 'https://api.zenexnetwork.com/v1/getnum'; key = globalSettings.zenexKey; payload = {range: rid, is_national: false, remove_plus: false}; headerName = 'mapikey'; }
+
+            const res = await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json', [headerName]: key }, body: JSON.stringify(payload) });
+            return await res.json();
+        }
+
+        async function fetchManualOtp() {
+            const numInput = document.getElementById('manualOtpNumber').value.trim().replace(/\D/g, '');
+            if(!numInput) return showToast("Enter a valid number", "warning");
+
+            const btn = document.getElementById('btnFetchManualOtp'); const resultBox = document.getElementById('manualOtpResult');
+            btn.disabled = true; resultBox.innerHTML = '';
+            
+            let timeLeft = 30; let foundCodes = new Set();
+            btn.innerHTML = `<span class="animate-pulse">Fetching... (${timeLeft}s)</span>`;
+
+            const interval = setInterval(async () => {
+                timeLeft -= 3;
+                if(timeLeft <= 0) {
+                    clearInterval(interval); btn.disabled = false; btn.innerHTML = `Fetch OTP`;
+                    if(foundCodes.size === 0) resultBox.innerHTML = `<div class="p-3 bg-[var(--bg-danger)] border border-[var(--border-danger)] rounded-xl text-center"><span class="text-danger font-bold text-xs">No OTP found in 30s. Try again.</span></div>`;
+                    return;
+                }
+                btn.innerHTML = `<span class="animate-pulse">Fetching... (${timeLeft}s)</span>`;
+
+                try {
+                    let foundThisTick = false;
+                    const panelsToScan = [];
+                    if(globalSettings.enableStex) panelsToScan.push('stex');
+                    if(globalSettings.enableVoltx) panelsToScan.push('voltx');
+                    if(globalSettings.enableZenex) panelsToScan.push('zenex');
+
+                    for (const panel of panelsToScan) {
+                        let base = '', key = '', headerName = 'mauthapi';
+                        // Proper Zenex V4 API for fetching records manually
+                        if (panel === 'stex') { base = 'https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/success-otp'; key = globalSettings.stexKey; }
+                        else if (panel === 'voltx') { base = 'https://api.2oo9.cloud/MXS47FLFX0U/tnevs/@public/api/success-otp'; key = globalSettings.voltxKey; }
+                        else if (panel === 'zenex') { base = 'https://api.zenexnetwork.com/v1/numsuccess/info'; key = globalSettings.zenexKey; headerName = 'mapikey'; }
+
+                        const res = await fetch(base, { headers: { [headerName]: key } });
+                        const data = await res.json();
+                        
+                        if (data?.meta?.code === 200 && data.data?.otps) {
+                            const matches = data.data.otps.filter(o => (o.number || '').includes(numInput));
+                            matches.forEach(match => {
+                                let msg = match.message || match.otp || '';
+                                const codeMatch = msg.match(/\b\d{3}\s?\d{3,5}\b|\b\d{4,8}\b/);
+                                const code = codeMatch ? codeMatch[0].replace(/\s+/g, '') : "CODE";
+                                
+                                if(!foundCodes.has(code)) {
+                                    foundCodes.add(code);
+                                    resultBox.innerHTML += `<div class="bg-card border border-main p-3 rounded-xl mb-1 flex flex-col gap-1 shadow-sm"><div class="flex justify-between items-center"><b class="text-xl font-black tracking-wider" style="color: var(--brand-navy);">${code}</b><button onclick="copySpecificText('${code}')" class="text-[9px] font-bold bg-main text-main px-3 py-1.5 border border-main rounded uppercase shadow-sm hover:opacity-80">Copy</button></div><span class="text-[11px] font-mono text-muted leading-relaxed break-words">${msg}</span></div>`;
+                                    foundThisTick = true;
+                                }
+                            });
+                        }
+                    }
+                    if(foundThisTick) { clearInterval(interval); btn.disabled = false; btn.innerHTML = `Fetch OTP`; showToast("OTP Found!", "success"); }
+                } catch(e) {}
+            }, 3000);
+        }
+
+        function filterNumberList(status) {
+            currentNumberFilter = status;
+            document.querySelectorAll('.number-tab').forEach(t => { t.classList.remove('active', 'border-[var(--brand-navy)]', 'text-[var(--brand-navy)]'); t.classList.add('border-transparent', 'text-muted'); });
+            const activeBtn = document.getElementById('tab-num-' + status.toLowerCase());
+            if(activeBtn) { activeBtn.classList.add('active', 'border-[var(--brand-navy)]', 'text-[var(--brand-navy)]'); activeBtn.classList.remove('border-transparent', 'text-muted'); }
+            renderActiveNumbers();
+        }
+
+        function animateRefresh(btn) {
+            const icon = btn.querySelector('.refresh-icon');
+            if(icon) {
+                icon.classList.add('animate-spin');
+                setTimeout(() => icon.classList.remove('animate-spin'), 600);
+            }
+        }
+
+        function startCountdownTicker() {
+            if(countdownTickerInterval) clearInterval(countdownTickerInterval);
+            countdownTickerInterval = setInterval(() => {
+                let anyActive = false;
+                activeRequests.forEach(req => {
+                    if (req.status === 'PENDING') {
+                        const elapsed = Date.now() - req.startTime;
+                        if (elapsed >= 20 * 60 * 1000) {
+                            req.status = 'FAILED';
+                            if (req.intervalId) clearInterval(req.intervalId);
+                            saveRequestsToStorage();
+                        }
+                        anyActive = true;
+                    }
+                });
+                if(anyActive || currentNumberFilter === 'ALL' || currentNumberFilter === 'PENDING') { renderActiveNumbers(); }
+            }, 1000);
+        }
+
+        function renderActiveNumbers() {
+            const listEl = document.getElementById('activeNumbersList');
+            if(!listEl) return;
+            listEl.innerHTML = '';
+            
+            const filtered = currentNumberFilter === 'ALL' ? activeRequests : activeRequests.filter(r => r.status === currentNumberFilter);
+            
+            if (filtered.length === 0) { listEl.innerHTML = '<div class="p-8 text-center text-sm text-muted font-semibold break-words">No history available.</div>'; return; }
+
+            filtered.forEach((req) => {
+                let action = ''; const country = getCountryInfo(req.fullNumber); const isPolling = (Date.now() - req.startTime) < (20 * 60 * 1000);
+
+                const msLeft = Math.max(0, (20 * 60 * 1000) - (Date.now() - req.startTime));
+                const totalSecs = Math.floor(msLeft / 1000); const mins = Math.floor(totalSecs / 60); const secs = totalSecs % 60;
+                const formattedTimer = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                let timerBadgeHtml = '';
+                if (req.status === 'PENDING' && isPolling) { timerBadgeHtml = `<span class="bg-card border border-main text-muted font-mono font-bold text-[10px] px-2 py-0.5 rounded-full shadow-sm ml-1.5 animate-pulse"><i class="fa-regular fa-clock mr-1"></i>${formattedTimer}</span>`; }
+
+                if (req.status === 'PENDING' && isPolling) { action = `<span class="badge-warning text-[9px] font-black tracking-widest uppercase shadow-sm px-2 py-1 rounded">Waiting SMS</span>`; } 
+                else if (req.status === 'FAILED' || (req.status === 'PENDING' && !isPolling)) { action = `<span class="badge-danger text-[9px] font-black tracking-widest uppercase shadow-sm px-2 py-1 rounded">Timeout</span>`; } 
+                else if (req.status === 'SUCCESS') {
+                    const isMulti = req.otps && req.otps.length > 1; let codesHtml = '';
+                    
+                    // Appyling Neon Purple Glass Theme exactly as requested
+                    const neonStyle = "background: rgba(217, 70, 239, 0.15); color: #f0abfc; border: 1px solid rgba(217, 70, 239, 0.5); box-shadow: 0 0 15px rgba(217, 70, 239, 0.25), inset 0 0 10px rgba(217, 70, 239, 0.1); text-shadow: 0 0 10px rgba(217, 70, 239, 0.8); backdrop-filter: blur(8px);";
+                    
+                    if(req.otps && req.otps.length > 0) {
+                        req.otps.forEach(otp => { codesHtml += `<div class="flex items-center gap-2 justify-end mb-1">${isMulti ? `<span class="badge-warning text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">Multi</span>` : ''}<button onclick="copySpecificText('${otp.code}')" class="text-lg font-black px-4 py-1.5 rounded-lg transition-all tracking-widest active:scale-95 hover:opacity-80" style="${neonStyle}" title="Click to copy OTP">${otp.code}</button></div>`; });
+                    } else { codesHtml = `<button onclick="copySpecificText('${req.code}')" class="text-lg font-black px-4 py-1.5 rounded-lg transition-all tracking-widest active:scale-95 hover:opacity-80" style="${neonStyle}" title="Click to copy OTP">${req.code}</button>`; }
+                    action = `<div class="flex flex-col items-end">${codesHtml}${isPolling ? '<span class="text-[8px] font-bold text-muted animate-pulse mt-1 tracking-widest">SCANNING...</span>' : ''}</div>`;
+                }
+
+                listEl.innerHTML += `<div class="p-4 flex justify-between items-start bg-card border-b border-main hover:bg-[var(--bg-main)] transition-colors"><div class="flex flex-col gap-1 min-w-0 pt-1"><div class="flex items-center flex-wrap gap-1"><span onclick="copySpecificText('+${req.fullNumber}')" class="font-mono font-black text-lg text-main cursor-pointer hover:opacity-80 transition-opacity truncate" style="color: var(--brand-navy)">+${req.fullNumber}</span>${timerBadgeHtml}</div><div class="flex items-center gap-1.5 text-xs text-muted font-bold truncate"><span>${country.flag}</span> <span class="truncate">${country.name}</span>${req.status === 'SUCCESS' ? `<span class="badge-success text-[8px] ml-1 px-1 rounded">SUCCESS</span>` : ''}</div></div><div class="flex justify-end items-start flex-shrink-0 ml-2">${action}</div></div>`;
+            });
+        }
+
+        function startPolling(reqObj) {
+            const timeout = 20 * 60 * 1000;
+            if(!reqObj.otps) reqObj.otps = []; if(!reqObj.processedIds) reqObj.processedIds = [];
+            
+            reqObj.intervalId = setInterval(async () => {
+                if (Date.now() - reqObj.startTime > timeout) { clearInterval(reqObj.intervalId); if(reqObj.status === 'PENDING') reqObj.status = 'FAILED'; saveRequestsToStorage(); renderActiveNumbers(); return; }
+                
+                const p = reqObj.panel;
+                let url = '', key = '', headerName = 'mauthapi';
+                // Zenex V4 API Multi-OTP check implementation
+                if(p === 'stex') { url = 'https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/success-otp'; key = globalSettings.stexKey; }
+                else if(p === 'voltx') { url = 'https://api.2oo9.cloud/MXS47FLFX0U/tnevs/@public/api/success-otp'; key = globalSettings.voltxKey; }
+                else if(p === 'zenex') { url = 'https://api.zenexnetwork.com/v1/numsuccess/info'; key = globalSettings.zenexKey; headerName = 'mapikey'; }
+
+                try {
+                    const res = await fetch(url, { headers: { [headerName]: key } });
+                    const data = await res.json();
+                    if (data && data.meta && data.meta.code === 200 && data.data.otps) {
+                        const matches = data.data.otps.filter(o => o.number === reqObj.fullNumber || o.number === reqObj.fullNumber.replace('+',''));
+                        let newFound = false;
+
+                        matches.forEach(match => {
+                            let msg = match.message || match.otp || '';
+                            let m_id = match.otp_id || match.nid || ''; // handles both legacy API and Zenex nid
+                            
+                            if(!reqObj.processedIds.includes(m_id)) {
+                                reqObj.processedIds.push(m_id);
+                                const codeMatch = msg.match(/\b\d{3}\s?\d{3,5}\b|\b\d{4,8}\b/);
+                                const code = codeMatch ? codeMatch[0].replace(/\s+/g, '') : "CODE";
+                                
+                                reqObj.otps.push({ code: code, message: msg, time: match.time || match.created_at });
+                                reqObj.status = 'SUCCESS'; reqObj.code = code; reqObj.message = msg;
+                                saveReceivedOTP(m_id, reqObj.fullNumber, msg, code, match.time || match.created_at, reqObj.panel); 
+                                newFound = true;
+                            }
+                        });
+
+                        if(newFound) { saveRequestsToStorage(); renderActiveNumbers(); showToast("OTP Received", "success"); }
+                    }
+                } catch(e) {}
+            }, 5000); 
+        }
+
+        async function saveReceivedOTP(otpId, num, msg, code, time, panelName) {
+            if(!otpId) return;
+            const docRef = getPublicDoc('otps', String(otpId));
+            const snap = await getDoc(docRef);
+            if(!snap.exists()) {
+                await setDoc(docRef, { uid: String(tgUser.id), number: num, message: msg, code: code, time: time, panel: panelName });
+                
+                // Track User OTP counts for admin panel display
+                const userRef = getPublicDoc('users', String(tgUser.id));
+                await updateDoc(userRef, { otpCount: increment(1) });
+            }
+        }
+
+        let allConsoleHits = []; 
+
+        async function loadConsoleData() {
+            try {
+                let p1=null, p2=null, p3=null;
+                if(globalSettings.enableStex) p1 = fetch('https://api.2oo9.cloud/MXS47FLFX0U/tness/@public/api/console', { headers: { 'mauthapi': globalSettings.stexKey } }).then(r=>r.json()).catch(()=>null);
+                if(globalSettings.enableVoltx) p2 = fetch('https://api.2oo9.cloud/MXS47FLFX0U/tnevs/@public/api/console', { headers: { 'mauthapi': globalSettings.voltxKey } }).then(r=>r.json()).catch(()=>null);
+                // Zenex V4 API Global Broadcast fetch
+                if(globalSettings.enableZenex) p3 = fetch('https://www.zenexnetwork.com/api/v1/global-broadcast', { headers: { 'mapikey': globalSettings.zenexKey } }).then(r=>r.json()).catch(()=>null);
+                
+                const [d1, d2, d3] = await Promise.all([p1, p2, p3]);
+                
+                allConsoleHits = []; rangeStats = {};
+                
+                const processData = (dataObj, panel) => {
+                    if(!dataObj) return;
+                    let hits = [];
+                    // Process array extraction based on provider API format
+                    if(dataObj.data && Array.isArray(dataObj.data.hits)) hits = dataObj.data.hits;
+                    else if(dataObj.data && Array.isArray(dataObj.data)) hits = dataObj.data;
+                    else if(Array.isArray(dataObj)) hits = dataObj;
+
+                    hits.forEach(h => {
+                        const rangeStr = String(h.range || h.number_range || h.rid || h.number || h.code || 'N/A');
+                        const msgStr = String(h.message || h.otp || h.sms || h.text || 'No message content');
+                        
+                        let detectedService = String(h.sid || h.service || h.app || 'APP').toUpperCase();
+                        
+                        const lowerMsg = msgStr.toLowerCase();
+                        for (const [srv, keywords] of Object.entries(SERVICE_SMS_KEYWORDS)) {
+                            if (keywords.some(kw => lowerMsg.includes(kw))) {
+                                detectedService = SERVICE_SHORTS[srv] || srv.toUpperCase();
+                                break;
+                            }
+                        }
+                        
+                        const hitObj = { range: rangeStr, message: msgStr, sid: detectedService, time: h.time || Date.now(), panel: panel };
+                        allConsoleHits.push(hitObj); 
+                        
+                        const rClean = rangeStr.replace('XXX',''); 
+                        if(!rangeStats[rClean]) rangeStats[rClean]={stex:0, voltx:0, zenex:0}; 
+                        rangeStats[rClean][panel] = (rangeStats[rClean][panel] || 0) + 1; 
+                    });
+                };
+
+                processData(d1, 'stex');
+                processData(d2, 'voltx');
+                processData(d3, 'zenex');
+                
+                allConsoleHits.sort((a,b) => b.time - a.time);
+                
+                if (activeSelectedService !== '') {
+                    calculateServiceCountries();
+                    renderServiceCountries();
+                }
+
+            } catch(e) { console.error("Console Fetch Error: ", e); }
+        }
+
+        function filterAdminUsers() {
+            const q = document.getElementById('adminUserSearch').value.toLowerCase(); 
+            const list = document.getElementById('adminUserList'); 
+            list.innerHTML = '';
+            
+            const filtered = q ? adminUsersCache.filter(u => (u.name && u.name.toLowerCase().includes(q)) || (u.uid && u.uid.includes(q))) : adminUsersCache;
+            
+            if(filtered.length === 0) {
+                list.innerHTML = '<div class="p-4 text-center text-sm text-muted">No users found.</div>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            filtered.forEach(u => { 
+                const isBanned = u.banned === true;
+                const safeUid = esc(u.uid || '');
+                const safeName = esc(u.name || 'Unknown User');
+                
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-card border border-main rounded-xl mb-2 flex flex-col gap-3 min-w-0 shadow-sm';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center gap-2 border-b border-main pb-2">
+                        <div class="min-w-0">
+                            <p class="font-bold text-main text-sm truncate" style="color: var(--brand-navy)">${safeName}</p>
+                            <p class="text-[10px] text-muted font-mono mt-0.5 truncate">ID: ${safeUid} • OTPs: <span class="text-[var(--brand-cyan)] font-bold">${u.otpCount || 0}</span></p>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md border shadow-sm ${isBanned ? 'badge-danger' : 'badge-success'}">${isBanned ? 'Banned' : 'Active'}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-1">
+                        <button onclick="updateUserProp('${safeUid}', 'banned', ${!isBanned})" class="flex-1 py-2.5 rounded-lg text-[10px] font-black border uppercase tracking-wider truncate transition shadow-sm ${isBanned ? 'bg-[var(--bg-success)] text-[var(--text-success)] border-[var(--border-success)]' : 'bg-[var(--bg-danger)] text-[var(--text-danger)] border-[var(--border-danger)]'}">${isBanned ? 'Unban User' : 'Ban User'}</button>
+                        <button onclick="deleteUser('${safeUid}')" class="px-3 py-2.5 rounded-lg text-[10px] font-black border border-main bg-card text-muted uppercase tracking-wider hover:text-danger hover:border-danger transition shadow-sm">Delete</button>
+                    </div>
+                `;
+                fragment.appendChild(div);
+            });
+
+            list.appendChild(fragment);
+        }
+
+        async function loadAdminUsers() { 
+            const list = document.getElementById('adminUserList'); 
+            if(!adminUserListOpen) return;
+            list.innerHTML = '<div class="p-4 text-center text-sm text-muted"><span class="animate-pulse">Loading users...</span></div>'; 
+            try { 
+                const snap = await getDocs(getPublicCollection('users')); 
+                adminUsersCache = []; 
+                let activeCount = 0;
+                const tenMinsAgo = Date.now() - (10 * 60 * 1000);
+
+                snap.forEach(d => {
+                    const data = d.data();
+                    adminUsersCache.push(data);
+                    if (data.lastActive && data.lastActive > tenMinsAgo) {
+                        activeCount++;
+                    }
+                }); 
+                
+                document.getElementById('adminTotalUsersCount').innerText = snap.size; 
+                document.getElementById('adminActiveUsersCount').innerText = activeCount; 
+                filterAdminUsers(); 
+            } catch(e) { 
+                list.innerHTML = `<div class="p-4 text-center text-sm text-danger">Error loading users.</div>`; 
+            } 
+        }
+
+        async function updateUserProp(uid, p, val) { 
+            try { 
+                await updateDoc(getPublicDoc('users', uid), { [p]: val }); 
+                showToast("Updated", "success"); 
+                
+                const userIndex = adminUsersCache.findIndex(u => u.uid === uid);
+                if (userIndex !== -1) { adminUsersCache[userIndex][p] = val; }
+                if(p==='banned') filterAdminUsers(); 
+            } catch(e) { showToast("Failed", "error"); } 
+        }
+        async function deleteUser(uid) { try { await deleteDoc(getPublicDoc('users', uid)); showToast("Deleted", "success"); loadAdminUsers(); } catch(e) { showToast("Failed", "error"); } }
+
+        async function saveAdminApi() { 
+            const btn = document.getElementById('btnSaveApiSet'); const orig = btn.innerHTML;
+            btn.innerHTML = "Saving Settings..."; btn.disabled = true;
+            try { 
+                await updateDoc(getPublicDoc('global', 'settings'), { 
+                    stexKey: document.getElementById('adminStexKey').value.trim(), 
+                    voltxKey: document.getElementById('adminVoltxKey').value.trim(), 
+                    zenexKey: document.getElementById('adminZenexKey').value.trim(),
+                    botToken: document.getElementById('adminBotToken').value.trim(), 
+                    enableStex: document.getElementById('adminEnableStex').checked, 
+                    enableVoltx: document.getElementById('adminEnableVoltx').checked, 
+                    enableZenex: document.getElementById('adminEnableZenex').checked, 
+                    welcomeMsg: document.getElementById('adminWelcomeMsg').value.trim() 
+                }); 
+                showToast("Settings & Config Saved", "success"); 
+            } catch(e) { showToast("Error saving", "error"); } 
+            finally { btn.innerHTML = orig; btn.disabled = false; }
+        }
+        
+        async function addCustomLink() {
+            const name = document.getElementById('adminLinkName').value.trim();
+            const url  = document.getElementById('adminLinkUrl').value.trim();
+            if (!name || !url) return showToast("Enter both name and URL", "error");
+            try {
+                await updateDoc(getPublicDoc('global', 'settings'), { customLinks: arrayUnion({name, url}) });
+                document.getElementById('adminLinkName').value = '';
+                document.getElementById('adminLinkUrl').value  = '';
+                showToast("Link added successfully", "success");
+            } catch(e) { showToast("Failed to add link", "error"); }
+        }
+        async function removeCustomLink(index) {
+            const links = globalSettings.customLinks || [];
+            const target = links[index];
+            if (!target) return showToast("Link not found", "error");
+            try {
+                await updateDoc(getPublicDoc('global', 'settings'), { customLinks: arrayRemove(target) });
+                showToast("Link removed", "success");
+            } catch(e) { showToast("Failed to remove link", "error"); }
+        }
+
+        async function sendBroadcast() {
+            const msg = document.getElementById('adminBroadcastMessage').value.trim(), sendDm = document.getElementById('adminSendTgDm').checked;
+            if(!msg) return showToast("Message empty", "error");
+            const btn = document.getElementById('broadcastBtnElement'); btn.disabled = true; btn.innerHTML = `<span class="animate-pulse">Sending...</span>`;
+            try {
+                await setDoc(getPublicDoc('global', 'broadcast'), { message: msg, timestamp: Date.now() });
+                if(sendDm && globalSettings.botToken) {
+                    const snap = await getDocs(getPublicCollection('users')); const uids = []; snap.forEach(d => { if(!d.data().banned) uids.push(d.id); });
+                    let successCount = 0;
+                    for (let i = 0; i < uids.length; i++) { try { await fetch(`https://api.telegram.org/bot${globalSettings.botToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: uids[i], text: `📢 <b>Announcement</b>\n\n${msg}`, parse_mode: 'HTML' }) }); successCount++; } catch(e) {} await new Promise(r => setTimeout(r, 35)); }
+                    showToast(`Broadcast Sent! App updated & ${successCount} DMs sent.`, "success");
+                } else showToast("Broadcast Sent to Web App!", "success");
+                document.getElementById('adminBroadcastMessage').value = ''; document.getElementById('adminSendTgDm').checked = false;
+            } catch(e) { showToast("Error", "error"); } finally { btn.disabled = false; btn.innerHTML = `<svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Send Broadcast`; }
+        }
+
+        function generate2FACode() {
+            let secret = document.getElementById('tool2faKey').value.trim().replace(/\s/g, '');
+            if(!secret) return showToast("Enter a Base32 Secret", "warning");
+            
+            const btn = document.querySelector('.refresh-icon');
+            if(btn) { btn.classList.add('animate-spin'); setTimeout(() => btn.classList.remove('animate-spin'), 600); }
+
+            try {
+                let key = CryptoJS.enc.Hex.parse(base32tohex(secret));
+                let epoch = Math.round(new Date().getTime() / 1000.0);
+                let time = ("0000000000000000" + Math.floor(epoch / 30).toString(16)).slice(-16);
+                let timeHex = CryptoJS.enc.Hex.parse(time);
+                let hmac = CryptoJS.HmacSHA1(timeHex, key);
+                let hmacHex = hmac.toString(CryptoJS.enc.Hex);
+                
+                let offset = parseInt(hmacHex.substring(hmacHex.length - 1), 16);
+                let otp = (parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) + "";
+                let code = otp.slice(-6).padStart(6, '0');
+                
+                document.getElementById('tool2faCodeTxt').innerText = code;
+                document.getElementById('tool2faResultBox').classList.remove('hidden');
+                showToast("Code generated!", "success");
+            } catch(e) { showToast("Invalid Base32 Key!", "error"); }
+        }
+        
+        function base32tohex(base32) {
+            const base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let bits = "", hex = "";
+            base32 = base32.replace(/=+$/, "").toUpperCase();
+            for (let i = 0; i < base32.length; i++) { let val = base32chars.indexOf(base32.charAt(i)); bits += ("00000" + val.toString(2)).slice(-5); }
+            for (let i = 0; i < bits.length - 3; i += 4) { hex += parseInt(bits.substr(i, 4), 2).toString(16); }
+            return hex;
+        }
+
+        const maleFirstNames = ["Rahul", "Tushar", "Sakib", "Rakib", "Arif", "Hasan", "Mehedi", "John", "Michael", "David", "Siam", "Nayeem"];
+        const femaleFirstNames = ["Sadia", "Nusrat", "Fariha", "Mim", "Ritu", "Sarah", "Emily", "Jessica", "Emma", "Aisha", "Jannat"];
+        const lastNames = ["Khan", "Ahmed", "Hasan", "Islam", "Rahman", "Smith", "Johnson", "Ali", "Chowdhury", "Hossain"];
+
+        function generateRealName(gender) {
+            const firstArr = gender === 'male' ? maleFirstNames : femaleFirstNames;
+            const firstName = firstArr[Math.floor(Math.random() * firstArr.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            
+            const boxContainer = document.getElementById('toolNameResultContainer');
+            const textSpan = document.getElementById('toolNameResultText');
+            textSpan.innerText = `${firstName} ${lastName}`;
+            boxContainer.classList.remove('hidden');
+            boxContainer.classList.add('flex');
+        }
+
+        const igBaseWords = ["tushar", "sakib", "rahul", "sadia", "mim", "arif", "john", "emily", "dark", "shadow", "cute", "edits", "wadc", "vibes"];
+        function generateIgUsernames() {
+            const base1 = igBaseWords[Math.floor(Math.random() * igBaseWords.length)];
+            const base2 = igBaseWords[Math.floor(Math.random() * igBaseWords.length)];
+            const randNum = Math.floor(Math.random() * 999);
+            
+            const variants = [
+                `edits.${base1}_7`,
+                `${base2}_.official`,
+                `its_.${base1}._`,
+                `123_.${base2}x`,
+                `${base1}_${base2}_${randNum}`
+            ];
+
+            const list = document.getElementById('toolIgResultList');
+            list.innerHTML = '';
+            variants.forEach(v => {
+                list.innerHTML += `<div class="flex justify-between items-center p-3 bg-card border border-main rounded-lg min-w-0 shadow-sm"><span class="font-mono text-sm font-bold text-main truncate">${v}</span><button onclick="copySpecificText('${v}')" class="text-[10px] bg-[var(--cyan-light)] text-[var(--brand-cyan)] border border-[var(--brand-cyan)] px-3 py-1.5 rounded uppercase font-black hover:opacity-80 transition flex-shrink-0">Copy</button></div>`;
+            });
+            list.classList.remove('hidden');
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
